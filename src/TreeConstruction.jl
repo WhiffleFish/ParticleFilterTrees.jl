@@ -8,7 +8,7 @@ Insert b node into tree
 - `obs` - observation received from G(s,a)
 - `r::Float64` - reward for going from ba node with obs o to node b
 """
-function insert_belief!(tree::PFTDPWTree{A,O}, b::WeightedParticleBelief{S}, ba_idx::Int, obs::O, r::Float64)::Nothing where {A,O,S}
+function insert_belief!(tree::PFTDPWTree{S,A,O}, b::WeightedParticleBelief{S}, ba_idx::Int, obs::O, r::Float64)::Nothing where {S,A,O}
     # NOTE: Parent ba_idx of root node is 0
     tree.n_b += 1
     push!(tree.b, b)
@@ -19,9 +19,7 @@ function insert_belief!(tree::PFTDPWTree{A,O}, b::WeightedParticleBelief{S}, ba_
 
     # root node doesn't have associated reaching action/observation
     if !(ba_idx == 0)
-        @assert !haskey(tree.ba_children[ba_idx], o) "Already existing belief node is being overwritten"
-        tree.ba_children[ba_idx][o] = tree.n_b
-
+        tree.ba_children[ba_idx][obs] = tree.n_b
     end
     nothing
 end
@@ -30,7 +28,7 @@ end
 """
 Insert ba node into tree
 """
-function insert_action!(tree::PFTDPWTree{A,O}, b_idx::Int, a::A)::Nothing where {A,O}
+function insert_action!(tree::PFTDPWTree{S,A,O}, b_idx::Int, a::A)::Nothing where {S,A,O}
     tree.n_ba += 1
     tree.b_children[b_idx][a] = tree.n_ba
     push!(tree.ba_children, Dict{O,Int}())

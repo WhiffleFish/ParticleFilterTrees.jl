@@ -1,15 +1,25 @@
 using ParticleFilters # WeightedParticleBelief
 using POMDPSimulators # RolloutSimulator
+using POMDPPolicies
 using POMDPs
 using Parameters # @with_kw
 using Random # Random.GLOBAL_RNG
+using BeliefUpdaters # NothingUpdater
+using D3Trees
 
-@with_kw mutable struct PFTDPWTree{A,O}
+#= TODO:
+- Check if all states are terminal in PF belief updater
+- For max_depth=5, Q-values reach the thousands for Tiger problem for which biggest
+negative penalty is -100 -> Either bugged Q-value update or Rollout
+- Create test for Qha exceeding bounds
+=#
+
+@with_kw mutable struct PFTDPWTree{S,A,O}
     Nh::Vector{Int} = Int[]
     Nha::Vector{Int} = Int[] # Number of times a history-action node has been visited
     Qha::Vector{Float64} = Float64[] # Map ba node to associated Q value
 
-    b::Vector{WeightedParticleBelief} = WeightedParticleBelief[]
+    b::Vector{WeightedParticleBelief{S}} = WeightedParticleBelief{S}[]
     b_children::Vector{Dict{A,Int}} = Dict{A, Int}[] # Map belief node index to dict mapping action to belief-action node index
     b_parent::Vector{Int} = Int[] # Map b node index to parent ba node index
     b_rewards::Vector{Float64} = Float64[] # Map b' node index to immediate reward associated with trajectory bao where b' = τ(bao)
@@ -23,18 +33,25 @@ end
 
 @with_kw struct PFTDPWSolver <: Solver
     max_depth::Int = 20
+    n_particles::Int = 100
     c::Float64 = 1.0
     k_o::Float64 = 10.0
     alpha_o::Float64 = 0.0 # Observation Progressive widening parameter
     k_a::Float64 = 5.0
     alpha_a::Float64 = 0.0 # Action Progressive widening parameter
     tree_queries::Int = 1_000
-    max_time::Float64 = Inf
+    max_time::Float64 = Inf # (seconds)
     rng::AbstractRNG = Random.GLOBAL_RNG
+    tree_in_info::Bool = true
 end
 
-struct PFTDPWPlanner <: Policy
+mutable struct PFTDPWPlanner <: Policy
     pomdp::POMDP
     sol::PFTDPWSolver
     tree::PFTDPWTree
 end
+
+include("ProgressiveWidening.jl")
+include("Generator.jl")
+include("TreeConstruction.jl")
+include("stuff.jl")
