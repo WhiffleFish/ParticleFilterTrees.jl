@@ -6,13 +6,7 @@ using Parameters # @with_kw
 using Random # Random.GLOBAL_RNG
 using BeliefUpdaters # NothingUpdater
 using D3Trees
-
-#= TODO:
-- Check if all states are terminal in PF belief updater
-- For max_depth=5, Q-values reach the thousands for Tiger problem for which biggest
-negative penalty is -100 -> Either bugged Q-value update or Rollout
-- Create test for Qha exceeding bounds
-=#
+import POMDPModelTools: action_info
 
 @with_kw mutable struct PFTDPWTree{S,A,O}
     Nh::Vector{Int} = Int[]

@@ -5,12 +5,12 @@ function rollout(pomdp::POMDP, default_policy::Policy, solver::Solver, b::Weight
     r = 0.0
     for (s,w) in weighted_particles(b)
         r += (w/b.weight_sum)*simulate(
-            RolloutSimulator(rng = solver.rng, max_steps = d),
-            pomdp,
-            default_policy,
-            NothingUpdater(),
-            b,
-            s
+                RolloutSimulator(rng = solver.rng, max_steps = d),
+                pomdp,
+                default_policy,
+                NothingUpdater(),
+                b,
+                s
             )
     end
     return r
@@ -18,9 +18,11 @@ end
 
 
 function search(pomdp::POMDP, tree::PFTDPWTree, sol::PFTDPWSolver, b_idx::Int, d::Int, default_policy::Policy)::Float64
+
     if d == 0
         return 0.0
     end
+
     a = act_prog_widen(pomdp, tree, sol, b_idx)
     ba_idx = tree.b_children[b_idx][a]
     if length(tree.ba_children[ba_idx]) <= sol.k_o*tree.Nha[ba_idx]^sol.alpha_o
@@ -31,6 +33,7 @@ function search(pomdp::POMDP, tree::PFTDPWTree, sol::PFTDPWSolver, b_idx::Int, d
         if !haskey(tree.ba_children[ba_idx], o)
             insert_belief!(tree, bp, ba_idx, o, r)
         end
+
         total = r + discount(pomdp)*rollout(pomdp, default_policy, sol, bp, d-1)
     else
         o, bp_idx = rand(tree.ba_children[ba_idx])
@@ -61,7 +64,7 @@ function initial_belief(b, n_p::Int)
     end
 end
 
-function action_info(planner::PFTDPWPlanner, b)::Dict{Symbol, Any}
+function POMDPModelTools.action_info(planner::PFTDPWPlanner, b)::Dict{Symbol, Any}
     sol = planner.sol
     pomdp = planner.pomdp
     max_iter = sol.tree_queries

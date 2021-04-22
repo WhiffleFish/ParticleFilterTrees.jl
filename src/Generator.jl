@@ -14,7 +14,7 @@ function GenBelief(rng::AbstractRNG, pomdp::POMDP{S,A,O}, b::WeightedParticleBel
         push!(new_weights, pdf(POMDPs.observation(pomdp, s, a, sp), sample_obs))
         weighted_return += r*w/b.weight_sum
     end
-    bp = WeightedParticleBelief(new_states, new_weights)
+    bp = WeightedParticleBelief(new_states, new_weights./sum(new_weights))
     return bp, sample_obs, weighted_return
 end
 
