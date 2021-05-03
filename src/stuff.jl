@@ -1,14 +1,15 @@
 """
 Return weighted average rollout
 """
-function rollout(pomdp::POMDP, default_policy::Policy, solver::Solver, b::WeightedParticleBelief, d::Int)::Float64 # Paralellizable
+function rollout(planner::Policy, solver::Solver, b::WeightedParticleBelief, d::Int)::Float64 # Paralellizable
     r = 0.0
+    sim = RolloutSimulator(rng = solver.rng, max_steps = d)
     for (s,w) in weighted_particles(b)
         r += (w/b.weight_sum)*simulate(
-                RolloutSimulator(rng = solver.rng, max_steps = d),
-                pomdp,
-                default_policy,
-                NothingUpdater(),
+                sim,
+                planner.pomdp,
+                planner.rollout_policy,
+                planner.updater,
                 b,
                 s
             )
@@ -17,7 +18,9 @@ function rollout(pomdp::POMDP, default_policy::Policy, solver::Solver, b::Weight
 end
 
 
-function search(pomdp::POMDP, tree::PFTDPWTree, sol::PFTDPWSolver, b_idx::Int, d::Int, default_policy::Policy)::Float64
+function search(planner::Policy, sol::PFTDPWSolver, b_idx::Int, d::Int)::Float64
+    tree = planner.tree
+    pomdp = planner.pomdp
 
     if d == 0
         return 0.0
@@ -34,11 +37,11 @@ function search(pomdp::POMDP, tree::PFTDPWTree, sol::PFTDPWSolver, b_idx::Int, d
             insert_belief!(tree, bp, ba_idx, o, r)
         end
 
-        total = r + discount(pomdp)*rollout(pomdp, default_policy, sol, bp, d-1)
+        total = r + discount(pomdp)*rollout(planner, sol, bp, d-1)
     else
         o, bp_idx = rand(tree.ba_children[ba_idx])
         r = tree.b_rewards[bp_idx]
-        total = r + discount(pomdp)*search(pomdp, tree, sol, bp_idx, d-1, default_policy)
+        total = r + discount(pomdp)*search(planner, sol, bp_idx, d-1)
     end
     tree.Nh[b_idx] += 1
     tree.Nha[ba_idx] += 1
@@ -71,30 +74,27 @@ function POMDPModelTools.action_info(planner::PFTDPWPlanner, b)::Dict{Symbol, An
     max_time = sol.max_time
     max_depth = sol.max_depth
 
-    default_policy = RandomPolicy(pomdp)# RandomPolicy(sol.rng, pomdp)
-
     S = statetype(pomdp)
     A = actiontype(pomdp)
     O = obstype(pomdp)
 
-    tree = PFTDPWTree{S,A,O}()
-    insert_belief!(tree, initial_belief(b, sol.n_particles), 0, first(observations(pomdp)), 0.0)
+    planner.tree = PFTDPWTree{S,A,O}()
+    insert_belief!(planner.tree, initial_belief(b, sol.n_particles), 0, first(observations(pomdp)), 0.0)
 
     # NOTE: max_time in nanoseconds may be a bit unwieldy -> using `time()` not `time_ns()` for now
     t0 = time()
     iter = 0
     while (time()-t0 < max_time) && (iter < max_iter)
-        search(pomdp, tree, sol, 1, max_depth, default_policy)
+        search(planner, sol, 1, max_depth)
         iter += 1
     end
 
-    planner.tree = tree
-    a = UCB1action(tree, 1, 0.0)
+    a = UCB1action(planner.tree, 1, 0.0)
 
     return Dict(
         :action => a,
         :n_iter => iter,
-        :tree => sol.tree_in_info ? tree : nothing
+        :tree => sol.tree_in_info ? planner.tree : nothing
         )
 end
 

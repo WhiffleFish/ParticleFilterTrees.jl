@@ -37,13 +37,18 @@ end
     max_time::Float64 = Inf # (seconds)
     rng::AbstractRNG = Random.GLOBAL_RNG
     tree_in_info::Bool = true
+    updater::Updater = NothingUpdater()
 end
 
 mutable struct PFTDPWPlanner <: Policy
     pomdp::POMDP
     sol::PFTDPWSolver
     tree::PFTDPWTree
+    rollout_policy::Policy
+    updater::Updater
 end
+
+PFTDPWPlanner(pomdp::POMDP,sol::PFTDPWSolver,tree::PFTDPWTree) = PFTDPWPlanner(pomdp, sol, tree, RandomPolicy(pomdp), NothingUpdater())
 
 include("ProgressiveWidening.jl")
 include("Generator.jl")
