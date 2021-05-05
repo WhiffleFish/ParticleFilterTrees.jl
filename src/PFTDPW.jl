@@ -6,7 +6,7 @@ using Parameters # @with_kw
 using Random # Random.GLOBAL_RNG
 using BeliefUpdaters # NothingUpdater
 using D3Trees
-import POMDPModelTools: action_info
+using POMDPModelTools
 
 @with_kw mutable struct PFTDPWTree{S,A,O}
     Nh::Vector{Int} = Int[]
@@ -40,6 +40,14 @@ end
     updater::Updater = NothingUpdater()
 end
 
+struct RandomRollout{A} <: Policy
+    actions::A
+end
+
+RandomRollout(pomdp::POMDP) = RandomRollout(actions(pomdp))
+
+POMDPs.action(p::RandomRollout,b) = rand(p.actions)
+
 mutable struct PFTDPWPlanner <: Policy
     pomdp::POMDP
     sol::PFTDPWSolver
@@ -48,9 +56,9 @@ mutable struct PFTDPWPlanner <: Policy
     updater::Updater
 end
 
-PFTDPWPlanner(pomdp::POMDP,sol::PFTDPWSolver,tree::PFTDPWTree) = PFTDPWPlanner(pomdp, sol, tree, RandomPolicy(pomdp), NothingUpdater())
+PFTDPWPlanner(pomdp::POMDP,sol::PFTDPWSolver,tree::PFTDPWTree) = PFTDPWPlanner(pomdp, sol, tree, RandomRollout(pomdp), NothingUpdater())
 
 include("ProgressiveWidening.jl")
 include("Generator.jl")
 include("TreeConstruction.jl")
-include("stuff.jl")
+include("main.jl")

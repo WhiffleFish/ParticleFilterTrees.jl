@@ -1,0 +1,13 @@
+# 5/4
+- `BabyBenchmark_5_4_01.csv`
+  - t = 0.01
+  - d = 20
+  - N = 500
+- `BabyBenchmark_5_4.csv`
+  - t = 0.1
+  - d = 20
+  - N = 500
+- `TigerBenchmark_5_4.csv`
+  - t = 0.1
+  - d = 20
+  - N = 500

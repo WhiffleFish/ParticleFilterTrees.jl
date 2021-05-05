@@ -12,9 +12,9 @@ function rollout(planner::Policy, solver::Solver, b::WeightedParticleBelief, d::
                 planner.updater,
                 b,
                 s
-            )
+            )::Float64
     end
-    return r
+    return r::Float64
 end
 
 
@@ -49,7 +49,7 @@ function search(planner::Policy, sol::PFTDPWSolver, b_idx::Int, d::Int)::Float64
     tree.Qha[ba_idx] = incremental_avg(tree.Qha[ba_idx], total, tree.Nha[ba_idx])
     # tree.Qha[ba_idx] + (total - tree.Qha[ba_idx])/tree.Nha[ba_idx]
 
-    return total
+    return total::Float64
 end
 
 function POMDPs.solve(pomdp::POMDP{S,A,O}, sol::PFTDPWSolver)::PFTDPWPlanner where {S,A,O}
@@ -68,6 +68,9 @@ function initial_belief(b, n_p::Int)
 end
 
 function POMDPModelTools.action_info(planner::PFTDPWPlanner, b)::Dict{Symbol, Any}
+    # NOTE: moved actions to beginning of function for more accurate timing
+    t0 = time()
+
     sol = planner.sol
     pomdp = planner.pomdp
     max_iter = sol.tree_queries
@@ -81,8 +84,7 @@ function POMDPModelTools.action_info(planner::PFTDPWPlanner, b)::Dict{Symbol, An
     planner.tree = PFTDPWTree{S,A,O}()
     insert_belief!(planner.tree, initial_belief(b, sol.n_particles), 0, first(observations(pomdp)), 0.0)
 
-    # NOTE: max_time in nanoseconds may be a bit unwieldy -> using `time()` not `time_ns()` for now
-    t0 = time()
+
     iter = 0
     while (time()-t0 < max_time) && (iter < max_iter)
         search(planner, sol, 1, max_depth)
