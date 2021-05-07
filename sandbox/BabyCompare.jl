@@ -30,7 +30,7 @@ function benchmark(pomdp::POMDP, planner1::Policy, planner2::Policy; depth::Int=
     return (r1Hist, r2Hist)::Tuple{Vector{Float64},Vector{Float64}}
 end
 
-N = 500
+N = 100
 r_pft, r_pomcp = benchmark(pomdp, pft_planner, pomcpow_planner, N=N)
 
 histogram([r_pft r_pomcp], alpha=0.5, labels=["PFT-DPW" "POMCPOW"], normalize=true, bins=20, legend=:topleft)

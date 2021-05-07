@@ -5,14 +5,15 @@ function rollout(planner::Policy, solver::Solver, b::WeightedParticleBelief, d::
     r = 0.0
     sim = RolloutSimulator(rng = solver.rng, max_steps = d)
     for (s,w) in weighted_particles(b)
-        r += (w/b.weight_sum)*simulate(
+        r_s = simulate(
                 sim,
                 planner.pomdp,
                 planner.rollout_policy,
-                planner.updater,
+                planner.sol.updater,
                 b,
                 s
             )::Float64
+        r += (w/b.weight_sum)*r_s
     end
     return r::Float64
 end
@@ -81,10 +82,11 @@ function POMDPModelTools.action_info(planner::PFTDPWPlanner, b)::Dict{Symbol, An
 
     UCB_a = UCB1action(planner.tree, 1, 0.0)
     a = UCB_a != nothing ? UCB_a : rand(actions(pomdp))
-    return Dict(
-        :action => a,
+
+    return Dict{Symbol, Any}(
+        :action => a::A,
         :n_iter => iter,
-        :tree => sol.tree_in_info ? planner.tree : nothing
+        :tree => planner.tree
         )
 end
 

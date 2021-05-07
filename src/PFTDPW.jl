@@ -25,7 +25,7 @@ using POMDPModelTools
     n_ba::Int = 0
 end
 
-@with_kw struct PFTDPWSolver <: Solver
+@with_kw struct PFTDPWSolver{RNG<:AbstractRNG, UPD <:Updater} <: Solver
     max_depth::Int = 20
     n_particles::Int = 100
     c::Float64 = 1.0
@@ -35,9 +35,9 @@ end
     alpha_a::Float64 = 0.0 # Action Progressive widening parameter
     tree_queries::Int = 1_000
     max_time::Float64 = Inf # (seconds)
-    rng::AbstractRNG = Random.GLOBAL_RNG
+    rng::RNG = Random.GLOBAL_RNG # parameteric type
     tree_in_info::Bool = true
-    updater::Updater = NothingUpdater()
+    updater::UPD = NothingUpdater()
 end
 
 struct RandomRollout{A} <: Policy
@@ -48,15 +48,14 @@ RandomRollout(pomdp::POMDP) = RandomRollout(actions(pomdp))
 
 POMDPs.action(p::RandomRollout,b) = rand(p.actions)
 
-mutable struct PFTDPWPlanner <: Policy
-    pomdp::POMDP
-    sol::PFTDPWSolver
-    tree::PFTDPWTree
-    rollout_policy::Policy
-    updater::Updater
+mutable struct PFTDPWPlanner{M<:POMDP, SOL<:PFTDPWSolver, TREE<:PFTDPWTree, P<:Policy} <: Policy
+    pomdp::M
+    sol::SOL
+    tree::TREE
+    rollout_policy::P
 end
 
-PFTDPWPlanner(pomdp::POMDP,sol::PFTDPWSolver,tree::PFTDPWTree) = PFTDPWPlanner(pomdp, sol, tree, RandomRollout(pomdp), NothingUpdater())
+PFTDPWPlanner(pomdp::POMDP,sol::PFTDPWSolver,tree::PFTDPWTree) = PFTDPWPlanner(pomdp, sol, tree, RandomRollout(pomdp))
 
 include("ProgressiveWidening.jl")
 include("Generator.jl")
