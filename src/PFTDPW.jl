@@ -36,7 +36,6 @@ end
     tree_queries::Int = 1_000
     max_time::Float64 = Inf # (seconds)
     rng::RNG = Random.GLOBAL_RNG # parameteric type
-    tree_in_info::Bool = true
     updater::UPD = NothingUpdater()
 end
 
