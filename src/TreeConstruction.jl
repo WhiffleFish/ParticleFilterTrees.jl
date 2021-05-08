@@ -14,16 +14,36 @@ function insert_belief!(tree::PFTDPWTree{S,A,O}, b::WeightedParticleBelief{S}, b
     push!(tree.b, b)
     push!(tree.b_children, Dict{A, Int}())
     push!(tree.Nh, 0)
-    push!(tree.b_parent, ba_idx) # root node has parent ba_idx 0
+    push!(tree.b_parent, ba_idx)
     push!(tree.b_rewards, r)
 
     # root node doesn't have associated reaching action/observation
-    if !(ba_idx == 0)
-        tree.ba_children[ba_idx][obs] = tree.n_b
-    end
+    tree.ba_children[ba_idx][obs] = tree.n_b
     nothing
 end
 
+function initial_belief(b, n_p::Int)
+    if b isa WeightedParticleBelief
+        return b
+    else
+        # rand(b, n_p) doesn't work -> For TigerPOMDP "Sampler not defined for this object"
+        s = [rand(b) for _ in 1:n_p]
+        w = repeat([1/n_p], n_p)
+        return WeightedParticleBelief(s,w)
+    end
+end
+
+function insert_root!(tree::PFTDPWTree{S,A,O}, b, n_p::Int)::Nothing where {S,A,O}
+    tree.n_b += 1
+    particle_b = initial_belief(b, n_p)
+
+    push!(tree.b, particle_b)
+    push!(tree.b_children, Dict{A, Int}())
+    push!(tree.Nh, 0)
+    push!(tree.b_parent, 0)
+    push!(tree.b_rewards, 0.0)
+    nothing
+end
 
 """
 Insert ba node into tree

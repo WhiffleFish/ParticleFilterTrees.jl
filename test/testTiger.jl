@@ -17,53 +17,37 @@ tiger = TigerPOMDP()
 include("../src/PFTDPW.jl")
 include("../src/tree_visualization.jl")
 
-solver = PFTDPWSolver(tree_queries=10_000, k_o=1, k_a=2, max_depth=10, c=100.0, n_particles=1_000)
+solver = PFTDPWSolver(tree_queries=10_000, k_o=1, k_a=2, max_depth=10, c=100.0, n_particles=1000)
 planner = solve(tiger, solver)
-@benchmark  a_info = action_info(planner, initialstate(tiger)) (seconds=60)
+@benchmark a_info = action_info(planner, initialstate(tiger)) (seconds=60)
 
-@benchmark  a_info = action_info(planner, initialstate(tiger)) (seconds=60)
+@benchmark a_info = action_info(planner, initialstate(tiger)) (seconds=60)
 
-@benchmark  a_info = action_info(planner, initialstate(tiger)) (seconds=60)
-
-a_info = action_info(planner, initialstate(tiger))
-
-tree = a_info[:tree]
-d3t = D3Tree(tree)
-inchrome(d3t)
+@profiler a_info = action_info(planner, initialstate(tiger))
 
 ##
-pomcpow_solver = POMCPOWSolver(tree_queries = 10_000, max_depth=10, criterion = MaxUCB(100.0), tree_in_info=true)
+pomcpow_solver = POMCPOWSolver(
+    max_time=0.1,
+    tree_queries = 100_000,
+    max_depth=10,
+    criterion = MaxUCB(100.0),
+    tree_in_info=false,
+    enable_action_pw = false,
+    k_observation = 1
+)
+
 pomcpow_planner = solve(pomcpow_solver, tiger)
 
 a, a_inf = action_info(pomcpow_planner, initialstate(tiger))
 
+@benchmark action_info(planner, initialstate(tiger)) (seconds=60)
+
+
+
+
+
+@benchmark action_info(pomcpow_planner, initialstate(tiger)) (seconds=60)
+
 inchrome(D3Tree(a_inf[:tree]))
 
-
-function RandomPolicyProfile()
-    tiger = TigerPOMDP()
-    policy = RandomPolicy(tiger)
-    b = initialstate(tiger)
-    @profiler [action(policy, b) for _ in 1:100_000]
-end
-
-function RandomPolicyProfile()
-    tiger = TigerPOMDP()
-    policy = RandomPolicy(tiger)
-    b = initialstate(tiger)
-    @profiler [action(policy, b) for _ in 1:100_000]
-end
-
-function RandomPolicyBenchmark()
-    tiger = TigerPOMDP()
-    policy = RandomPolicy(tiger)
-    b = initialstate(tiger)
-    @benchmark action($policy, $b)
-end
-
-function NewRandomPolicyBenchmark()
-    tiger = TigerPOMDP()
-    policy = RandomRollout(tiger)
-    b = initialstate(tiger)
-    @benchmark action($policy, $b)
-end
+@benchmark action_info(pomcpow_planner, initialstate(tiger))

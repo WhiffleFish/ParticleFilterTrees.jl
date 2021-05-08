@@ -5,14 +5,15 @@ function rollout(planner::Policy, solver::Solver, b::WeightedParticleBelief, d::
     r = 0.0
     sim = RolloutSimulator(rng = solver.rng, max_steps = d)
     for (s,w) in weighted_particles(b)
-        r += (w/b.weight_sum)*simulate(
+        r_s = simulate(
                 sim,
                 planner.pomdp,
                 planner.rollout_policy,
-                planner.updater,
+                planner.sol.updater,
                 b,
                 s
             )::Float64
+        r += (w/b.weight_sum)*r_s
     end
     return r::Float64
 end
@@ -36,35 +37,24 @@ function search(planner::Policy, sol::PFTDPWSolver, b_idx::Int, d::Int)::Float64
         if !haskey(tree.ba_children[ba_idx], o)
             insert_belief!(tree, bp, ba_idx, o, r)
         end
-
-        total = r + discount(pomdp)*rollout(planner, sol, bp, d-1)
+        ro = rollout(planner, sol, bp, d-1)
+        total = r + discount(pomdp)*ro
     else
         o, bp_idx = rand(tree.ba_children[ba_idx])
         r = tree.b_rewards[bp_idx]
-        total = r + discount(pomdp)*search(planner, sol, bp_idx, d-1)
+        rs = search(planner, sol, bp_idx, d-1)
+        total = r + discount(pomdp)*rs
     end
     tree.Nh[b_idx] += 1
     tree.Nha[ba_idx] += 1
 
     tree.Qha[ba_idx] = incremental_avg(tree.Qha[ba_idx], total, tree.Nha[ba_idx])
-    # tree.Qha[ba_idx] + (total - tree.Qha[ba_idx])/tree.Nha[ba_idx]
 
     return total::Float64
 end
 
 function POMDPs.solve(pomdp::POMDP{S,A,O}, sol::PFTDPWSolver)::PFTDPWPlanner where {S,A,O}
     return PFTDPWPlanner(pomdp, sol, PFTDPWTree{S,A,O}())
-end
-
-function initial_belief(b, n_p::Int)
-    if b isa WeightedParticleBelief
-        return b
-    else
-        # rand(b, n_p) doesn't work -> For TigerPOMDP "Sampler not defined for this object"
-        s = [rand(b) for _ in 1:n_p]
-        w = repeat([1/n_p], n_p)
-        return WeightedParticleBelief(s,w)
-    end
 end
 
 function POMDPModelTools.action_info(planner::PFTDPWPlanner, b)::Dict{Symbol, Any}
@@ -82,8 +72,7 @@ function POMDPModelTools.action_info(planner::PFTDPWPlanner, b)::Dict{Symbol, An
     O = obstype(pomdp)
 
     planner.tree = PFTDPWTree{S,A,O}()
-    insert_belief!(planner.tree, initial_belief(b, sol.n_particles), 0, first(observations(pomdp)), 0.0)
-
+    insert_root!(planner.tree, b, sol.n_particles)
 
     iter = 0
     while (time()-t0 < max_time) && (iter < max_iter)
@@ -91,12 +80,13 @@ function POMDPModelTools.action_info(planner::PFTDPWPlanner, b)::Dict{Symbol, An
         iter += 1
     end
 
-    a = UCB1action(planner.tree, 1, 0.0)
+    UCB_a = UCB1action(planner.tree, 1, 0.0)
+    a = UCB_a != nothing ? UCB_a : rand(actions(pomdp))
 
-    return Dict(
-        :action => a,
+    return Dict{Symbol, Any}(
+        :action => a::A,
         :n_iter => iter,
-        :tree => sol.tree_in_info ? planner.tree : nothing
+        :tree => planner.tree
         )
 end
 
