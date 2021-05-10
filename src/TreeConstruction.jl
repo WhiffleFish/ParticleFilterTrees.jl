@@ -14,7 +14,6 @@ function insert_belief!(tree::PFTDPWTree{S,A,O}, b::WeightedParticleBelief{S}, b
     push!(tree.b, b)
     push!(tree.b_children, Dict{A, Int}())
     push!(tree.Nh, 0)
-    push!(tree.b_parent, ba_idx)
     push!(tree.b_rewards, r)
 
     # root node doesn't have associated reaching action/observation
@@ -40,7 +39,6 @@ function insert_root!(tree::PFTDPWTree{S,A,O}, b, n_p::Int)::Nothing where {S,A,
     push!(tree.b, particle_b)
     push!(tree.b_children, Dict{A, Int}())
     push!(tree.Nh, 0)
-    push!(tree.b_parent, 0)
     push!(tree.b_rewards, 0.0)
     nothing
 end
@@ -52,7 +50,6 @@ function insert_action!(tree::PFTDPWTree{S,A,O}, b_idx::Int, a::A)::Nothing wher
     tree.n_ba += 1
     tree.b_children[b_idx][a] = tree.n_ba
     push!(tree.ba_children, Dict{O,Int}())
-    push!(tree.ba_parent, b_idx)
     push!(tree.Nha, 0)
     push!(tree.Qha, 0.0)
     nothing

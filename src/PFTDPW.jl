@@ -15,11 +15,9 @@ using POMDPModelTools
 
     b::Vector{WeightedParticleBelief{S}} = WeightedParticleBelief{S}[]
     b_children::Vector{Dict{A,Int}} = Dict{A, Int}[] # Map belief node index to dict mapping action to belief-action node index
-    b_parent::Vector{Int} = Int[] # Map b node index to parent ba node index
     b_rewards::Vector{Float64} = Float64[] # Map b' node index to immediate reward associated with trajectory bao where b' = τ(bao)
 
     ba_children::Vector{Dict{O,Int}} = Dict{O,Int}[] # Map belief-action node index to dict mapping observation to belief node index
-    ba_parent::Vector{Int} = Int[] # Map ba node index to parent b node index
 
     n_b::Int = 0
     n_ba::Int = 0
