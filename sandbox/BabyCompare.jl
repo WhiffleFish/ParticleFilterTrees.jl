@@ -33,7 +33,7 @@ end
 N = 100
 r_pft, r_pomcp = benchmark(pomdp, pft_planner, pomcpow_planner, N=N)
 
-histogram([r_pft r_pomcp], alpha=0.5, labels=["PFT-DPW" "POMCPOW"], normalize=true, bins=20, legend=:topleft)
+histogram([r_pft r_pomcp], alpha=0.5, labels=["PFT-DPW" "POMCPOW"], normalize=true, legend=:topleft)
 title!("Baby Benchmark\nt=$(t)s, d=$d, N=$N")
 xlabel!("Returns")
 ylabel!("Density")

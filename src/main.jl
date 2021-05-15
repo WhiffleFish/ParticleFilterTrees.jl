@@ -32,18 +32,19 @@ function search(planner::Policy, sol::PFTDPWSolver, b_idx::Int, d::Int)::Float64
     if length(tree.ba_children[ba_idx]) <= sol.k_o*tree.Nha[ba_idx]^sol.alpha_o
         bp, o, r = GenBelief(sol.rng, pomdp, tree.b[b_idx], a)
 
-        # MAKE SURE WE'RE NOT OVERWRITING BELIEFS
-        # NOTE: This check is not necessary in continuous obs
         if !haskey(tree.ba_children[ba_idx], o)
             insert_belief!(tree, bp, ba_idx, o, r)
+            ro = rollout(planner, sol, bp, d-1)
+            total = r + discount(pomdp)*ro
+        else
+            bp_idx = tree.ba_children[ba_idx][o]
+            r = tree.b_rewards[bp_idx]
+            total = r + discount(pomdp)*search(planner, sol, bp_idx, d-1)
         end
-        ro = rollout(planner, sol, bp, d-1)
-        total = r + discount(pomdp)*ro
     else
         o, bp_idx = rand(tree.ba_children[ba_idx])
         r = tree.b_rewards[bp_idx]
-        rs = search(planner, sol, bp_idx, d-1)
-        total = r + discount(pomdp)*rs
+        total = r + discount(pomdp)*search(planner, sol, bp_idx, d-1)
     end
     tree.Nh[b_idx] += 1
     tree.Nha[ba_idx] += 1
