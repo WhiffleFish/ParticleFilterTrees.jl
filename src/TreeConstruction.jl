@@ -12,12 +12,12 @@ function insert_belief!(tree::PFTDPWTree{S,A,O}, b::WeightedParticleBelief{S}, b
     # NOTE: Parent ba_idx of root node is 0
     tree.n_b += 1
     push!(tree.b, b)
-    push!(tree.b_children, Dict{A, Int}())
+    push!(tree.b_children, Tuple{A,Int}[])
     push!(tree.Nh, 0)
     push!(tree.b_rewards, r)
 
-    # root node doesn't have associated reaching action/observation
-    tree.ba_children[ba_idx][obs] = tree.n_b
+    tree.bao_children[(ba_idx,obs)] = tree.n_b # if check_repeat_obs
+    push!(tree.ba_children[ba_idx],tree.n_b)
     nothing
 end
 
@@ -37,7 +37,7 @@ function insert_root!(tree::PFTDPWTree{S,A,O}, b, n_p::Int)::Nothing where {S,A,
     particle_b = initial_belief(b, n_p)
 
     push!(tree.b, particle_b)
-    push!(tree.b_children, Dict{A, Int}())
+    push!(tree.b_children, Tuple{A,Int}[])
     push!(tree.Nh, 0)
     push!(tree.b_rewards, 0.0)
     nothing
@@ -48,8 +48,8 @@ Insert ba node into tree
 """
 function insert_action!(tree::PFTDPWTree{S,A,O}, b_idx::Int, a::A)::Nothing where {S,A,O}
     tree.n_ba += 1
-    tree.b_children[b_idx][a] = tree.n_ba
-    push!(tree.ba_children, Dict{O,Int}())
+    push!(tree.b_children[b_idx], (a,tree.n_ba))
+    push!(tree.ba_children, Int[])
     push!(tree.Nha, 0)
     push!(tree.Qha, 0.0)
     nothing

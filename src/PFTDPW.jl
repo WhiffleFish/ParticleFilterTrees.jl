@@ -14,10 +14,11 @@ using POMDPModelTools
     Qha::Vector{Float64} = Float64[] # Map ba node to associated Q value
 
     b::Vector{WeightedParticleBelief{S}} = WeightedParticleBelief{S}[]
-    b_children::Vector{Dict{A,Int}} = Dict{A, Int}[] # Map belief node index to dict mapping action to belief-action node index
+    b_children::Vector{Vector{Tuple{A,Int}}} = Vector{Tuple{A,Int}}[] # b_idx => [(a,ba_idx), ...]
     b_rewards::Vector{Float64} = Float64[] # Map b' node index to immediate reward associated with trajectory bao where b' = τ(bao)
 
-    ba_children::Vector{Dict{O,Int}} = Dict{O,Int}[] # Map belief-action node index to dict mapping observation to belief node index
+    bao_children::Dict{Tuple{Int,O},Int} = Dict{Tuple{Int,O},Int}() # (ba_idx,O) => bp_idx
+    ba_children::Vector{Vector{Int}} = Vector{Int}[] # Number of keys (ba_idx,O) under some ba node in ba_children (for PW)
 
     n_b::Int = 0
     n_ba::Int = 0

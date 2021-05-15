@@ -27,22 +27,21 @@ function search(planner::Policy, sol::PFTDPWSolver, b_idx::Int, d::Int)::Float64
         return 0.0
     end
 
-    a = act_prog_widen(pomdp, tree, sol, b_idx)
-    ba_idx = tree.b_children[b_idx][a]
+    a, ba_idx = act_prog_widen(pomdp, tree, sol, b_idx)
     if length(tree.ba_children[ba_idx]) <= sol.k_o*tree.Nha[ba_idx]^sol.alpha_o
         bp, o, r = GenBelief(sol.rng, pomdp, tree.b[b_idx], a)
 
-        if !haskey(tree.ba_children[ba_idx], o)
+        if !haskey(tree.bao_children, (ba_idx,o))
             insert_belief!(tree, bp, ba_idx, o, r)
             ro = rollout(planner, sol, bp, d-1)
             total = r + discount(pomdp)*ro
         else
-            bp_idx = tree.ba_children[ba_idx][o]
+            bp_idx = tree.bao_children[(ba_idx,o)]
             r = tree.b_rewards[bp_idx]
             total = r + discount(pomdp)*search(planner, sol, bp_idx, d-1)
         end
     else
-        o, bp_idx = rand(tree.ba_children[ba_idx])
+        bp_idx = rand(tree.ba_children[ba_idx])
         r = tree.b_rewards[bp_idx]
         total = r + discount(pomdp)*search(planner, sol, bp_idx, d-1)
     end
@@ -81,7 +80,7 @@ function POMDPModelTools.action_info(planner::PFTDPWPlanner, b)::Dict{Symbol, An
         iter += 1
     end
 
-    UCB_a = UCB1action(planner.tree, 1, 0.0)
+    UCB_a, _ = UCB1action(planner.tree, 1, 0.0)
     a = UCB_a != nothing ? UCB_a : rand(actions(pomdp))
 
     return Dict{Symbol, Any}(
