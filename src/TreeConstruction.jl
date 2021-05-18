@@ -8,16 +8,18 @@ Insert b node into tree
 - `obs` - observation received from G(s,a)
 - `r::Float64` - reward for going from ba node with obs o to node b
 """
-function insert_belief!(tree::PFTDPWTree{S,A,O}, b::WeightedParticleBelief{S}, ba_idx::Int, obs::O, r::Float64)::Nothing where {S,A,O}
+function insert_belief!(tree::PFTDPWTree{S,A,O}, b::WeightedParticleBelief{S}, ba_idx::Int, obs::O, r::Float64, planner::PFTDPWPlanner)::Nothing where {S,A,O}
     # NOTE: Parent ba_idx of root node is 0
     tree.n_b += 1
     push!(tree.b, b)
     push!(tree.b_children, Tuple{A,Int}[])
     push!(tree.Nh, 0)
     push!(tree.b_rewards, r)
-
-    tree.bao_children[(ba_idx,obs)] = tree.n_b # if check_repeat_obs
     push!(tree.ba_children[ba_idx],tree.n_b)
+
+    if planner.sol.check_repeat_obs
+        tree.bao_children[(ba_idx,obs)] = tree.n_b
+    end
     nothing
 end
 

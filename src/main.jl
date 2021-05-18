@@ -23,7 +23,7 @@ function search(planner::Policy, sol::PFTDPWSolver, b_idx::Int, d::Int)::Float64
     tree = planner.tree
     pomdp = planner.pomdp
 
-    if d == 0
+    if iszero(d)
         return 0.0
     end
 
@@ -32,7 +32,7 @@ function search(planner::Policy, sol::PFTDPWSolver, b_idx::Int, d::Int)::Float64
         bp, o, r = GenBelief(sol.rng, pomdp, tree.b[b_idx], a)
 
         if !haskey(tree.bao_children, (ba_idx,o))
-            insert_belief!(tree, bp, ba_idx, o, r)
+            insert_belief!(tree, bp, ba_idx, o, r, planner)
             ro = rollout(planner, sol, bp, d-1)
             total = r + discount(pomdp)*ro
         else
@@ -54,7 +54,7 @@ function search(planner::Policy, sol::PFTDPWSolver, b_idx::Int, d::Int)::Float64
 end
 
 function POMDPs.solve(pomdp::POMDP{S,A,O}, sol::PFTDPWSolver)::PFTDPWPlanner where {S,A,O}
-    return PFTDPWPlanner(pomdp, sol, PFTDPWTree{S,A,O}())
+    return PFTDPWPlanner(pomdp, sol, PFTDPWTree{S,A,O}(1))
 end
 
 function POMDPModelTools.action_info(planner::PFTDPWPlanner, b)::Dict{Symbol, Any}
@@ -71,7 +71,7 @@ function POMDPModelTools.action_info(planner::PFTDPWPlanner, b)::Dict{Symbol, An
     A = actiontype(pomdp)
     O = obstype(pomdp)
 
-    planner.tree = PFTDPWTree{S,A,O}()
+    planner.tree = PFTDPWTree{S,A,O}(sol.tree_queries)
     insert_root!(planner.tree, b, sol.n_particles)
 
     iter = 0

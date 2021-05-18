@@ -3,13 +3,14 @@ using POMCPOW
 using ProgressMeter
 using BenchmarkTools
 using Plots
+using Statistics
 using CSV, DataFrames
 
 pomdp = LightDark1D()
 include("../src/PFTDPW.jl")
 
-t = 0.1
-d = 100
+t = 1.0
+d = 50
 pft_solver = PFTDPWSolver(
     max_time=t,
     tree_queries=100_000,
@@ -34,8 +35,8 @@ pomcpow_solver = POMCPOWSolver(
 pomcpow_planner = solve(pomcpow_solver, pomdp)
 
 function benchmark(pomdp::POMDP, planner1::Policy, planner2::Policy; depth::Int=20, N::Int=100)
-    r1Hist = Float64[]
-    r2Hist = Float64[]
+    r1Hist = sizehint!(Float64[],N)
+    r2Hist = sizehint!(Float64[],N)
     ro = RolloutSimulator(max_steps=depth)
     upd = BootstrapFilter(pomdp, 1_000)
     @showprogress for i = 1:N
@@ -56,6 +57,8 @@ xlabel!("Returns")
 ylabel!("Density")
 mean(r_pft)
 mean(r_pomcp)
+std(r_pft)/sqrt(N)
+std(r_pomcp)/sqrt(N)
 
 df = DataFrame(PFTDPW=r_pft, POMCPOW=r_pomcp)
 

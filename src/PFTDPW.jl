@@ -22,6 +22,25 @@ using POMDPModelTools
 
     n_b::Int = 0
     n_ba::Int = 0
+
+    function PFTDPWTree{S,A,O}(sz::Int) where {S,A,O}
+        sz = min(sz, 100_000)
+        return new(
+            sizehint!(Int[], sz),
+            sizehint!(Int[], sz),
+            sizehint!(Float64[], sz),
+
+            sizehint!(WeightedParticleBelief{S}[], sz),
+            sizehint!(Vector{Tuple{A,Int}}[], sz),
+            sizehint!(Float64[], sz),
+
+            sizehint!(Dict{Tuple{Int,O},Int}(), sz),
+            sizehint!(Vector{Int}[], sz),
+
+            0,
+            0
+            )
+    end
 end
 
 @with_kw struct PFTDPWSolver{RNG<:AbstractRNG, UPD <:Updater} <: Solver
@@ -36,6 +55,7 @@ end
     max_time::Float64 = Inf # (seconds)
     rng::RNG = Random.GLOBAL_RNG # parameteric type
     updater::UPD = NothingUpdater()
+    check_repeat_obs::Bool = true
 end
 
 struct RandomRollout{A} <: Policy
