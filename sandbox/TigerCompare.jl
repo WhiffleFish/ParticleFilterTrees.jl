@@ -13,7 +13,7 @@ pomdp = TigerPOMDP()
 t = 0.1
 d=10
 pft_solver = PFTDPWSolver(max_time=t, tree_queries=100_000, k_o=1, k_a=2, max_depth=d, c=100.0, n_particles=100)
-pft_planner = solve(pomdp, pft_solver)
+pft_planner = solve(pft_solver, pomdp)
 
 pomcpow_solver = POMCPOWSolver(
     max_time=t,

@@ -24,7 +24,7 @@ pft_solver = PFTDPWSolver(
     n_particles=100,
 )
 
-pft_planner = solve(pomdp, pft_solver)
+pft_planner = solve(pft_solver, pomdp)
 
 pomcpow_solver = POMCPOWSolver(
     max_time=t,

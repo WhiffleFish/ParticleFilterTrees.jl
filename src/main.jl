@@ -53,7 +53,7 @@ function search(planner::Policy, sol::PFTDPWSolver, b_idx::Int, d::Int)::Float64
     return total::Float64
 end
 
-function POMDPs.solve(pomdp::POMDP{S,A,O}, sol::PFTDPWSolver)::PFTDPWPlanner where {S,A,O}
+function POMDPs.solve(sol::PFTDPWSolver, pomdp::POMDP{S,A,O})::PFTDPWPlanner where {S,A,O}
     return PFTDPWPlanner(pomdp, sol, PFTDPWTree{S,A,O}(1))
 end
 
