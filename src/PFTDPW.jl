@@ -1,3 +1,5 @@
+module PFTDPW
+
 using ParticleFilters # WeightedParticleBelief
 using POMDPSimulators # RolloutSimulator
 using POMDPPolicies
@@ -7,6 +9,11 @@ using Random # Random.GLOBAL_RNG
 using BeliefUpdaters # NothingUpdater
 using D3Trees
 using POMDPModelTools
+
+export
+    PFTDPWTree
+    PFTDPWSolver
+    PFTDPWPlanner
 
 @with_kw mutable struct PFTDPWTree{S,A,O}
     Nh::Vector{Int} = Int[]
@@ -79,3 +86,5 @@ include("ProgressiveWidening.jl")
 include("Generator.jl")
 include("TreeConstruction.jl")
 include("main.jl")
+
+end # module

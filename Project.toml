@@ -1,10 +1,13 @@
+name = "PFTDPW"
+uuid = "4e818e2d-9c2f-4c72-90ef-e40b8c35c855"
+authors = ["WhiffleFish <tylertronics@gmail.com>"]
+version = "0.1.0"
+
 [deps]
 BeliefUpdaters = "8bb6e9a1-7d73-552c-a44a-e5dc5634aac4"
 BenchmarkTools = "6e4b80f9-dd63-53aa-95a3-0cdb28fa8baf"
 CSV = "336ed68f-0bac-5ca0-87d4-7b16caf5d00b"
 D3Trees = "e3df1716-f71e-5df9-9e2d-98e193103c45"
-DataFrames = "a93c6f00-e57d-5684-b7b6-d8193f3e46c0"
-POMCPOW = "4c53ee00-974c-466f-8fa5-8dd73959bbab"
 POMDPModelTools = "08074719-1b2a-587c-a292-00f91cc44415"
 POMDPModels = "355abbd5-f08e-5560-ac9e-8b5f2592a0ca"
 POMDPPolicies = "182e52fb-cfd0-5e46-8c26-fd0667c990f4"
