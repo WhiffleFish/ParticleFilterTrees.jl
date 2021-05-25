@@ -1,12 +1,12 @@
+using POMDPs
+using BeliefUpdaters
 using POMDPModels
 using POMCPOW
 using ProgressMeter
-using BenchmarkTools
 using Plots
-using CSV, DataFrames
-
+using Statistics
+using PFTDPW
 pomdp = BabyPOMDP()
-include("../src/PFTDPW.jl")
 
 t = 0.1
 d=20
@@ -30,7 +30,7 @@ function benchmark(pomdp::POMDP, planner1::Policy, planner2::Policy; depth::Int=
     return (r1Hist, r2Hist)::Tuple{Vector{Float64},Vector{Float64}}
 end
 
-N = 500
+N = 100
 r_pft, r_pomcp = benchmark(pomdp, pft_planner, pomcpow_planner, N=N)
 
 histogram([r_pft r_pomcp], alpha=0.5, labels=["PFT-DPW" "POMCPOW"], normalize=true, legend=:topleft)
@@ -39,7 +39,5 @@ xlabel!("Returns")
 ylabel!("Density")
 mean(r_pft)
 mean(r_pomcp)
-
-df = DataFrame(PFTDPW=r_pft, POMCPOW=r_pomcp)
-
-CSV.write("sandbox/BabyBenchmark_5_4_01.csv", df)
+std(r_pft)/sqrt(N)
+std(r_pomcp)/sqrt(N)

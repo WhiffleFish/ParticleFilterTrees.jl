@@ -426,9 +426,9 @@ uuid = "ea8e919c-243c-51af-8825-aaa63cd721ce"
 
 [[SentinelArrays]]
 deps = ["Dates", "Random"]
-git-tree-sha1 = "6ccde405cf0759eba835eb613130723cb8f10ff9"
+git-tree-sha1 = "2ce5f07bbc1be0a1b5d5c0e281441d3bf8a7a2e5"
 uuid = "91c51154-3ec4-41a3-a24f-3f23e20d615c"
-version = "1.2.16"
+version = "1.3.0"
 
 [[Serialization]]
 uuid = "9e88b42a-f829-5b0c-bbe9-9e923198166b"

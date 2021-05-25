@@ -1,12 +1,14 @@
+using POMDPs
 using POMDPModels
 using POMCPOW
 using ProgressMeter
 using BenchmarkTools
+using POMDPSimulators
 using Plots
-using CSV, DataFrames
+using BeliefUpdaters
 
+using PFTDPW
 pomdp = TigerPOMDP()
-include("../src/PFTDPW.jl")
 
 t = 0.1
 d=10
@@ -46,7 +48,3 @@ xlabel!("Returns")
 ylabel!("Density")
 mean(r_pft)
 mean(r_pomcp)
-
-df = DataFrame(PFTDPW=r_pft, POMCPOW=r_pomcp)
-
-CSV.write("sandbox/TigerBenchmark_5_4.csv", df)
