@@ -1,5 +1,6 @@
 using POMDPs
 using BeliefUpdaters
+using POMDPSimulators
 using POMDPModels
 using POMCPOW
 using ProgressMeter

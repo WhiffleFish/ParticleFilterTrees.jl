@@ -57,8 +57,7 @@ function POMDPs.solve(sol::PFTDPWSolver, pomdp::POMDP{S,A,O})::PFTDPWPlanner whe
     return PFTDPWPlanner(pomdp, sol, PFTDPWTree{S,A,O}(1))
 end
 
-function POMDPModelTools.action_info(planner::PFTDPWPlanner, b)::Dict{Symbol, Any}
-    # NOTE: moved actions to beginning of function for more accurate timing
+function POMDPModelTools.action_info(planner::PFTDPWPlanner, b)
     t0 = time()
 
     sol = planner.sol
@@ -83,7 +82,7 @@ function POMDPModelTools.action_info(planner::PFTDPWPlanner, b)::Dict{Symbol, An
     UCB_a, _ = UCB1action(planner.tree, 1, 0.0)
     a = UCB_a != nothing ? UCB_a : rand(actions(pomdp))
 
-    return Dict{Symbol, Any}(
+    return a::A, Dict{Symbol, Any}(
         :action => a::A,
         :n_iter => iter,
         :tree => planner.tree
@@ -91,7 +90,7 @@ function POMDPModelTools.action_info(planner::PFTDPWPlanner, b)::Dict{Symbol, An
 end
 
 function POMDPs.action(planner::PFTDPWPlanner, b)
-    return action_info(planner, b)[:action]
+    return first(action_info(planner, b))
 end
 
 function POMDPs.isterminal(pomdp::POMDP, b::WeightedParticleBelief)
