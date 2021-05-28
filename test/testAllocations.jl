@@ -1,9 +1,9 @@
 @info "Load Packages..."
 using Pkg
+Pkg.activate(".")
 using Profile
 using POMDPModels
-Pkg.activate(".")
-include("../src/PFTDPW.jl")
+using PFTDPW
 
 @info "Instantiate Solver..."
 tiger = TigerPOMDP()

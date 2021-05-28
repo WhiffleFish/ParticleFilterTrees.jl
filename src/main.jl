@@ -23,7 +23,7 @@ function search(planner::Policy, sol::PFTDPWSolver, b_idx::Int, d::Int)::Float64
     tree = planner.tree
     pomdp = planner.pomdp
 
-    if iszero(d) || isterminal(pomdp, tree.b[b_idx])
+    if iszero(d) || isterminalbelief(pomdp, tree.b[b_idx]) # circumvent collision w/ isterminal(m::QuickPOMDP, args...; kwargs...)
         return 0.0
     end
 
@@ -93,6 +93,6 @@ function POMDPs.action(planner::PFTDPWPlanner, b)
     return first(action_info(planner, b))
 end
 
-function POMDPs.isterminal(pomdp::POMDP, b::WeightedParticleBelief)
+function isterminalbelief(pomdp::POMDP, b::WeightedParticleBelief)
     all(isterminal(pomdp, s) for s in particles(b))
 end
