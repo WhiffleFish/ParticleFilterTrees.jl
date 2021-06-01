@@ -29,7 +29,7 @@ function initial_belief(b, n_p::Int)
     else
         # rand(b, n_p) doesn't work -> For TigerPOMDP "Sampler not defined for this object"
         s = [rand(b) for _ in 1:n_p]
-        w = repeat([1/n_p], n_p)
+        w = fill(1/n_p, n_p)
         return WeightedParticleBelief(s,w)
     end
 end

@@ -1,4 +1,3 @@
-# NOTE: Maybe use more sophisticated sampling strategy
 function next_action(pomdp::POMDP)
     return rand(actions(pomdp)) # TODO: include user-provided RNG
 end
@@ -7,8 +6,8 @@ function UCB(Q::Float64, Nh::Int, Nha::Int, c::Float64)::Float64
     return Nha > 0 ? Q + c*sqrt(log(Nh)/Nha) : Inf
 end
 
-# NOTE: May want to also return action index
 function UCB1action(tree::PFTDPWTree, b_idx::Int, c::Float64)
+
     max_ucb = -Inf
     opt_a = nothing
     opt_idx = 0
@@ -33,5 +32,19 @@ function act_prog_widen(pomdp::POMDP, tree::PFTDPWTree, sol::PFTDPWSolver, b_idx
             insert_action!(tree, b_idx, a)
         end
     end
-    return UCB1action(tree, b_idx, sol.c)
+
+    # return UCB1action(tree, b_idx, c) fails with SubHunt occassionally for some reason
+    max_ucb = -Inf
+    opt_a = nothing
+    opt_idx = 0
+    for (a,ba_idx) in tree.b_children[b_idx]
+        ucb = UCB(tree.Qha[ba_idx], tree.Nh[b_idx], tree.Nha[ba_idx], c)
+        if ucb > max_ucb
+            max_ucb = ucb
+            opt_a = a
+            opt_idx = ba_idx
+        end
+    end
+
+    return opt_a, opt_idx
 end
