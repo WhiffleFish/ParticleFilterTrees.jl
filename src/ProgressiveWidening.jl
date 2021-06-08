@@ -9,7 +9,7 @@ end
 function UCB1action(tree::PFTDPWTree, b_idx::Int, c::Float64)
 
     max_ucb = -Inf
-    opt_a = nothing
+    opt_a = first(tree.b_children[b_idx][1])
     opt_idx = 0
     for (a,ba_idx) in tree.b_children[b_idx]
         ucb = UCB(tree.Qha[ba_idx], tree.Nh[b_idx], tree.Nha[ba_idx], c)
@@ -33,18 +33,5 @@ function act_prog_widen(pomdp::POMDP, tree::PFTDPWTree, sol::PFTDPWSolver, b_idx
         end
     end
 
-    # return UCB1action(tree, b_idx, c) fails with SubHunt occassionally for some reason
-    max_ucb = -Inf
-    opt_a = nothing
-    opt_idx = 0
-    for (a,ba_idx) in tree.b_children[b_idx]
-        ucb = UCB(tree.Qha[ba_idx], tree.Nh[b_idx], tree.Nha[ba_idx], c)
-        if ucb > max_ucb
-            max_ucb = ucb
-            opt_a = a
-            opt_idx = ba_idx
-        end
-    end
-
-    return opt_a, opt_idx
+    return UCB1action(tree, b_idx, c)
 end

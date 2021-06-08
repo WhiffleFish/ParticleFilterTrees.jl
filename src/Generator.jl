@@ -1,20 +1,41 @@
 function GenBelief(rng::AbstractRNG, pomdp::POMDP{S,A,O}, b::WeightedParticleBelief{S}, a)::Tuple{WeightedParticleBelief, O, Float64} where {S,A,O}
 
-    sample_obs = @gen(:o)(pomdp, rand(b), a, rng)
+    weighted_return = 0.0
 
     bp = WeightedParticleBelief(sizehint!(S[],n_particles(b)), sizehint!(Float64[],n_particles(b)))
-    weighted_return = 0.0
-    for (s,w) in weighted_particles(b)
-        (sp, r) = @gen(:sp,:r)(pomdp, s, a, rng)
+
+    p_idx = StatsBase.sample(StatsBase.weights(b.weights))
+    sample_obs = nothing
+
+    # Propagation
+    for (i,(s,w)) in enumerate(weighted_particles(b))
+        if i == p_idx
+            (sp, sample_obs, r) = @gen(:sp,:o,:r)(pomdp, s, a, rng)
+        else
+            if !isterminal(pomdp, s)
+                (sp, r) = @gen(:sp,:r)(pomdp, s, a, rng)
+            else
+                (sp,r) = (s, 0.0)
+            end
+        end
+
         push!(bp.particles, sp)
 
-        push!(bp.weights, w*pdf(POMDPs.observation(pomdp, s, a, sp), sample_obs))
-        weighted_return += r*w/b.weight_sum
+        weighted_return += r*w
     end
-    bp.weight_sum = sum(bp.weights)
-    bp.weights ./= bp.weight_sum
+
+    # Reweighting
+    @inbounds for i in 1:n_particles(b)
+        s = b.particles[i]
+        sp = bp.particles[i]
+        w = b.weights[i]
+        push!(bp.weights, w*pdf(POMDPs.observation(pomdp, s, a, sp), sample_obs))
+    end
+
+    normalize!(bp.weights, 1)
     bp.weight_sum = 1.0
-    return bp, sample_obs, weighted_return
+
+    return bp::WeightedParticleBelief{S}, sample_obs::O, weighted_return::Float64
 end
 
 function incremental_avg(Qhat::Float64, Q::Float64, N::Int)

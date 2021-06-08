@@ -24,14 +24,9 @@ function insert_belief!(tree::PFTDPWTree{S,A,O}, b::WeightedParticleBelief{S}, b
 end
 
 function initial_belief(b, n_p::Int)
-    if b isa WeightedParticleBelief
-        return b
-    else
-        # rand(b, n_p) doesn't work -> For TigerPOMDP "Sampler not defined for this object"
-        s = [rand(b) for _ in 1:n_p]
-        w = fill(1/n_p, n_p)
-        return WeightedParticleBelief(s,w)
-    end
+    s = [rand(b) for _ in 1:n_p]
+    w = fill(1/n_p, n_p)
+    return WeightedParticleBelief(s,w)
 end
 
 function insert_root!(tree::PFTDPWTree{S,A,O}, b, n_p::Int)::Nothing where {S,A,O}

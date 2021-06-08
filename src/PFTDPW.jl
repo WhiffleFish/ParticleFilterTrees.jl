@@ -9,6 +9,8 @@ using Random # Random.GLOBAL_RNG
 using BeliefUpdaters # NothingUpdater
 using D3Trees
 using POMDPModelTools
+import StatsBase
+using LinearAlgebra
 
 export PFTDPWTree, PFTDPWSolver, PFTDPWPlanner, RandomRollout
 
@@ -57,7 +59,7 @@ end
     alpha_a::Float64 = 0.0 # Action Progressive widening parameter
     tree_queries::Int = 1_000
     max_time::Float64 = Inf # (seconds)
-    rng::RNG = Random.GLOBAL_RNG # parameteric type
+    rng::RNG = Random.GLOBAL_RNG
     updater::UPD = NothingUpdater()
     check_repeat_obs::Bool = true
 end

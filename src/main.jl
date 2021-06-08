@@ -1,9 +1,9 @@
 """
 Return weighted average rollout
 """
-function rollout(planner::Policy, solver::Solver, b::WeightedParticleBelief, d::Int)::Float64 # Paralellizable
+function rollout(planner::PFTDPWPlanner, b::WeightedParticleBelief, d::Int)::Float64
     r = 0.0
-    sim = RolloutSimulator(rng = solver.rng, max_steps = d)
+    sim = RolloutSimulator(rng = planner.sol.rng, max_steps = d)
     for (s,w) in weighted_particles(b)
         r_s = simulate(
                 sim,
@@ -13,17 +13,18 @@ function rollout(planner::Policy, solver::Solver, b::WeightedParticleBelief, d::
                 b,
                 s
             )::Float64
-        r += (w/b.weight_sum)*r_s
+        r += w*r_s # weight sum assumed to be 1.0
     end
     return r::Float64
 end
 
 
-function search(planner::Policy, sol::PFTDPWSolver, b_idx::Int, d::Int)::Float64
+function search(planner::PFTDPWPlanner, b_idx::Int, d::Int)::Float64
     tree = planner.tree
     pomdp = planner.pomdp
+    sol = planner.sol
 
-    if iszero(d) || isterminalbelief(pomdp, tree.b[b_idx]) # circumvent collision w/ isterminal(m::QuickPOMDP, args...; kwargs...)
+    if iszero(d) || isterminalbelief(pomdp, tree.b[b_idx])
         return 0.0
     end
 
@@ -33,17 +34,17 @@ function search(planner::Policy, sol::PFTDPWSolver, b_idx::Int, d::Int)::Float64
 
         if !haskey(tree.bao_children, (ba_idx,o))
             insert_belief!(tree, bp, ba_idx, o, r, planner)
-            ro = rollout(planner, sol, bp, d-1)
+            ro = rollout(planner, bp, d-1)
             total = r + discount(pomdp)*ro
         else
             bp_idx = tree.bao_children[(ba_idx,o)]
             r = tree.b_rewards[bp_idx]
-            total = r + discount(pomdp)*search(planner, sol, bp_idx, d-1)
+            total = r + discount(pomdp)*search(planner, bp_idx, d-1)
         end
     else
         bp_idx = rand(tree.ba_children[ba_idx])
         r = tree.b_rewards[bp_idx]
-        total = r + discount(pomdp)*search(planner, sol, bp_idx, d-1)
+        total = r + discount(pomdp)*search(planner, bp_idx, d-1)
     end
     tree.Nh[b_idx] += 1
     tree.Nha[ba_idx] += 1
@@ -75,17 +76,17 @@ function POMDPModelTools.action_info(planner::PFTDPWPlanner, b)
 
     iter = 0
     while (time()-t0 < max_time) && (iter < max_iter)
-        search(planner, sol, 1, max_depth)
+        search(planner, 1, max_depth)
         iter += 1
     end
 
-    UCB_a, _ = UCB1action(planner.tree, 1, 0.0)
-    a = UCB_a != nothing ? UCB_a : rand(actions(pomdp))
+    a = iter == 0 ? rand(actions(pomdp)) : first(UCB1action(planner.tree, 1, 0.0))
 
     return a::A, Dict{Symbol, Any}(
         :action => a::A,
         :n_iter => iter,
-        :tree => planner.tree
+        :tree => planner.tree,
+        :time => time() - t0
         )
 end
 
