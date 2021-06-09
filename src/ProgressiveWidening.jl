@@ -6,10 +6,10 @@ function UCB(Q::Float64, Nh::Int, Nha::Int, c::Float64)::Float64
     return Nha > 0 ? Q + c*sqrt(log(Nh)/Nha) : Inf
 end
 
-function UCB1action(tree::PFTDPWTree, b_idx::Int, c::Float64)
+function UCB1action(tree::PFTDPWTree{S,A,O}, b_idx::Int, c::Float64) where {S,A,O}
 
     max_ucb = -Inf
-    opt_a = first(tree.b_children[b_idx][1])
+    opt_a = first(Vector{A}(undef, 1))
     opt_idx = 0
     for (a,ba_idx) in tree.b_children[b_idx]
         ucb = UCB(tree.Qha[ba_idx], tree.Nh[b_idx], tree.Nha[ba_idx], c)
