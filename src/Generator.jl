@@ -35,14 +35,19 @@ function GenBelief(rng::AbstractRNG, pomdp::POMDP{S,A,O}, b::WeightedParticleBel
     end
 
     # Reweighting
-    @inbounds for i in 1:n_particles(b)
+    @inbounds for i in 1:N
         s = particle(b, i)
         sp = particle(bp, i)
         w = weight(b, i)
         push!(bp.weights, w*pdf(POMDPs.observation(pomdp, s, a, sp), sample_obs))
     end
 
-    normalize!(bp.weights, 1)
+    if !iszero(sum(bp.weights))
+        normalize!(bp.weights, 1)
+    else
+        bp.weights .= 1/N
+    end
+
     bp.weight_sum = 1.0
 
     return bp::WeightedParticleBelief{S}, sample_obs::O, weighted_return::Float64
