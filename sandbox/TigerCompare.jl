@@ -6,7 +6,7 @@ using BenchmarkTools
 using POMDPSimulators
 using Plots
 using BeliefUpdaters
-
+using StatsBase
 using PFTDPW
 pomdp = TigerPOMDP()
 
@@ -48,3 +48,5 @@ xlabel!("Returns")
 ylabel!("Density")
 mean(r_pft)
 mean(r_pomcp)
+StatsBase.std(r_pft)/N
+StatsBase.std(r_pomcp)/N

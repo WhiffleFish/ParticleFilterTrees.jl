@@ -9,7 +9,40 @@ using Plots
 using Statistics
 
 using PFTDPW
-pomdp = LightDark1D()
+using QuickPOMDPs
+using POMDPModelTools
+using Distributions
+
+r = 60
+light_loc = 10
+
+pomdp = QuickPOMDP(
+    states = -r:r+1,                  # r+1 is a terminal state
+    actions = [-10, -1, 0, 1, 10],
+    discount = 0.95,
+    isterminal = s -> !(s in -r:r),
+    obstype = Float64,
+
+    transition = function (s, a)
+        if a == 0
+            return Deterministic(r+1)
+        else
+            return Deterministic(clamp(s+a, -r, r))
+        end
+    end,
+
+    observation = (s, a, sp) -> Normal(sp, abs(sp - light_loc) + 0.0001),
+
+    reward = function (s, a, sp, o)
+        if a == 0
+            return s == 0 ? 100 : -100
+        else
+            return -1.0
+        end
+    end,
+
+    initialstate = POMDPModelTools.Uniform(div(-r,2):div(r,2))
+)
 
 t = 0.1
 d = 50

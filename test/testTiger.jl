@@ -2,7 +2,6 @@ using POMDPs
 using ParticleFilters
 using POMDPModels
 using POMDPModelTools
-using POMCPOW
 using BenchmarkTools
 using PFTDPW
 
