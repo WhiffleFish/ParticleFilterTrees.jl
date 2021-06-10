@@ -11,7 +11,7 @@ function GenBelief(rng::AbstractRNG, pomdp::POMDP{S,A,O}, b::WeightedParticleBel
     sample_s = particle(b, p_idx)
     if isterminal(pomdp, sample_s)
         w = inv(N)
-        bp.particles .= sample_s
+        fill!(bp.particles,sample_s)
         bp.weights .=  w
         sample_obs = first(Vector{O}(undef,1)) # Random Observation
         weighted_return = 0.0
