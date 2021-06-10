@@ -80,13 +80,14 @@ function POMDPModelTools.action_info(planner::PFTDPWPlanner, b)
         iter += 1
     end
 
-    a = iter == 0 ? rand(actions(pomdp)) : first(UCB1action(planner.tree, 1, 0.0))
+    a, a_idx = UCB1action(planner.tree, 1, 0.0)
+    if a_idx == 0; a = rand(actions(pomdp)); end
 
     return a::A, Dict{Symbol, Any}(
         :action => a::A,
-        :n_iter => iter,
-        :tree => planner.tree,
-        :time => time() - t0
+        :n_iter => iter::Int,
+        :tree => planner.tree::PFTDPWTree,
+        :time => (time() - t0)::Float64
         )
 end
 
