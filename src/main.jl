@@ -28,9 +28,9 @@ function search(planner::PFTDPWPlanner, b_idx::Int, d::Int)::Float64
         return 0.0
     end
 
-    a, ba_idx = act_prog_widen(pomdp, tree, sol, b_idx)
+    a, ba_idx = act_prog_widen(planner, b_idx)
     if length(tree.ba_children[ba_idx]) <= sol.k_o*tree.Nha[ba_idx]^sol.alpha_o
-        bp, o, r = GenBelief(sol.rng, pomdp, tree.b[b_idx], a)
+        bp, o, r = GenBelief(planner, pomdp, tree.b[b_idx], a)
 
         if !haskey(tree.bao_children, (ba_idx,o))
             insert_belief!(tree, bp, ba_idx, o, r, planner)
@@ -55,7 +55,8 @@ function search(planner::PFTDPWPlanner, b_idx::Int, d::Int)::Float64
 end
 
 function POMDPs.solve(sol::PFTDPWSolver, pomdp::POMDP{S,A,O})::PFTDPWPlanner where {S,A,O}
-    return PFTDPWPlanner(pomdp, sol, PFTDPWTree{S,A,O}(1))
+    a, o = get_placeholders(pomdp)
+    return PFTDPWPlanner(pomdp, sol, PFTDPWTree{S,A,O}(sol.tree_queries), RandomRollout(pomdp), a, o)
 end
 
 function POMDPModelTools.action_info(planner::PFTDPWPlanner, b)
@@ -67,11 +68,9 @@ function POMDPModelTools.action_info(planner::PFTDPWPlanner, b)
     max_time = sol.max_time
     max_depth = sol.max_depth
 
-    S = statetype(pomdp)
     A = actiontype(pomdp)
-    O = obstype(pomdp)
 
-    planner.tree = PFTDPWTree{S,A,O}(sol.tree_queries)
+    empty!(planner.tree)
     insert_root!(planner.tree, b, sol.n_particles)
 
     iter = 0
@@ -80,7 +79,7 @@ function POMDPModelTools.action_info(planner::PFTDPWPlanner, b)
         iter += 1
     end
 
-    a, a_idx = UCB1action(planner.tree, 1, 0.0)
+    a, a_idx = UCB1action(planner, planner.tree, 1, 0.0)
     if a_idx == 0; a = rand(actions(pomdp)); end
 
     return a::A, Dict{Symbol, Any}(
@@ -97,4 +96,29 @@ end
 
 function isterminalbelief(pomdp::POMDP, b::WeightedParticleBelief)
     all(isterminal(pomdp, s) for s in particles(b))
+end
+
+function Base.empty!(tree::PFTDPWTree)
+    empty!(tree.Nh)
+    empty!(tree.Nha)
+    empty!(tree.Qha)
+
+    empty!(tree.b)
+    empty!(tree.b_children)
+    empty!(tree.b_rewards)
+
+    empty!(tree.bao_children)
+    empty!(tree.ba_children)
+
+    tree.n_b = 0
+    tree.n_ba = 0
+
+    nothing
+end
+
+function get_placeholders(pomdp::POMDP{S,A,O}) where {S,A,O}
+    a = rand(actions(pomdp))
+    s = rand(initialstate(pomdp))
+    o = @gen(:o)(pomdp,s,a)
+    return a::A, o::O
 end

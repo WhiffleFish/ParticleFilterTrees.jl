@@ -72,11 +72,14 @@ RandomRollout(pomdp::POMDP) = RandomRollout(actions(pomdp))
 
 POMDPs.action(p::RandomRollout,b) = rand(p.actions)
 
-mutable struct PFTDPWPlanner{M<:POMDP, SOL<:PFTDPWSolver, TREE<:PFTDPWTree, P<:Policy} <: Policy
+mutable struct PFTDPWPlanner{M<:POMDP, SOL<:PFTDPWSolver, TREE<:PFTDPWTree, P<:Policy, A, O} <: Policy
     pomdp::M
     sol::SOL
     tree::TREE
     rollout_policy::P
+
+    _placeholder_a::A
+    _placeholder_o::O
 end
 
 PFTDPWPlanner(pomdp::POMDP,sol::PFTDPWSolver,tree::PFTDPWTree) = PFTDPWPlanner(pomdp, sol, tree, RandomRollout(pomdp))

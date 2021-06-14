@@ -25,7 +25,7 @@ end
 
 function initial_belief(b, n_p::Int)
     s = [rand(b) for _ in 1:n_p]
-    w = fill(1/n_p, n_p)
+    w = fill(inv(n_p), n_p)
     return WeightedParticleBelief(s,w)
 end
 

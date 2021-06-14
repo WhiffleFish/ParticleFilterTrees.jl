@@ -1,20 +1,24 @@
-function GenBelief(rng::AbstractRNG, pomdp::POMDP{S,A,O}, b::WeightedParticleBelief{S}, a)::Tuple{WeightedParticleBelief, O, Float64} where {S,A,O}
+function GenBelief(
+    planner::PFTDPWPlanner,
+    pomdp::POMDP{S,A,O},
+    b::WeightedParticleBelief{S},
+    a::A
+    )::Tuple{WeightedParticleBelief, O, Float64} where {S,A,O}
 
+    rng = planner.sol.rng
     N = n_particles(b)
     weighted_return = 0.0
 
     bp = WeightedParticleBelief(Vector{S}(undef, N), Vector{Float64}(undef, N))
 
     p_idx = StatsBase.sample(StatsBase.weights(b.weights))
-    sample_obs = nothing
+    sample_obs = planner._placeholder_o
 
     sample_s = particle(b, p_idx)
     if isterminal(pomdp, sample_s)
         w = inv(N)
         fill!(bp.particles,sample_s)
-        bp.weights .=  w
-        sample_obs = first(Vector{O}(undef,1)) # Random Observation
-        weighted_return = 0.0
+        fill!(bp.weights,w)
         return bp::WeightedParticleBelief{S}, sample_obs::O, weighted_return::Float64
     end
 
@@ -30,7 +34,7 @@ function GenBelief(rng::AbstractRNG, pomdp::POMDP{S,A,O}, b::WeightedParticleBel
             end
         end
 
-        bp.particles[i] = sp
+        @inbounds bp.particles[i] = sp
 
         weighted_return += r*w
     end
@@ -46,7 +50,7 @@ function GenBelief(rng::AbstractRNG, pomdp::POMDP{S,A,O}, b::WeightedParticleBel
     if !iszero(sum(bp.weights))
         normalize!(bp.weights, 1)
     else
-        bp.weights .= 1/N
+        fill!(bp.weights, inv(N))
     end
 
     bp.weight_sum = 1.0
