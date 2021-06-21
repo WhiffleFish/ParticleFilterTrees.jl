@@ -88,5 +88,6 @@ include("ProgressiveWidening.jl")
 include("Generator.jl")
 include("TreeConstruction.jl")
 include("main.jl")
+include("TreeVis.jl")
 
 end # module
