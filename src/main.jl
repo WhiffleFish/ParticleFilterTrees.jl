@@ -56,6 +56,13 @@ end
 
 function POMDPs.solve(sol::PFTDPWSolver, pomdp::POMDP{S,A,O})::PFTDPWPlanner where {S,A,O}
     a, o = get_placeholders(pomdp)
+    if !sol.enable_action_pw
+        try
+            @assert length(actions(pomdp)) < Inf
+        catch e
+            error("Action space should have some defined length if enable_action_pw=false")
+        end
+    end
     return PFTDPWPlanner(pomdp, sol, PFTDPWTree{S,A,O}(sol.tree_queries), RandomRollout(pomdp), a, o)
 end
 
@@ -83,7 +90,6 @@ function POMDPModelTools.action_info(planner::PFTDPWPlanner, b)
     if a_idx == 0; a = rand(actions(pomdp)); end
 
     return a::A, Dict{Symbol, Any}(
-        :action => a::A,
         :n_iter => iter::Int,
         :tree => planner.tree::PFTDPWTree,
         :time => (time() - t0)::Float64

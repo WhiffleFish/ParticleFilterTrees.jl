@@ -12,10 +12,16 @@ function insert_belief!(tree::PFTDPWTree{S,A,O}, b::WeightedParticleBelief{S}, b
     # NOTE: Parent ba_idx of root node is 0
     tree.n_b += 1
     push!(tree.b, b)
-    push!(tree.b_children, Tuple{A,Int}[])
     push!(tree.Nh, 0)
     push!(tree.b_rewards, r)
     push!(tree.ba_children[ba_idx],tree.n_b)
+
+    if planner.sol.enable_action_pw
+        push!(tree.b_children, Tuple{A,Int}[])
+    else
+        L = length(actions(planner.pomdp))
+        push!(tree.b_children, sizehint!(Tuple{A,Int}[],L))
+    end
 
     if planner.sol.check_repeat_obs
         tree.bao_children[(ba_idx,obs)] = tree.n_b

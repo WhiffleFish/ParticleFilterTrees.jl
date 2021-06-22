@@ -1,5 +1,5 @@
 function next_action(pomdp::POMDP)
-    return rand(actions(pomdp)) # TODO: include user-provided RNG
+    return rand(actions(pomdp))
 end
 
 function UCB(Q::Float64, Nh::Int, Nha::Int, c::Float64)::Float64
@@ -12,7 +12,10 @@ function UCB1action(planner::PFTDPWPlanner, tree::PFTDPWTree{S,A,O}, b_idx::Int,
     opt_a = planner._placeholder_a
     opt_idx = 0
     for (a,ba_idx) in tree.b_children[b_idx]
-        ucb = UCB(tree.Qha[ba_idx], tree.Nh[b_idx], tree.Nha[ba_idx], c)
+        Nha = tree.Nha[ba_idx]
+        Nha == 0 && return a::A, ba_idx::Int
+
+        @inbounds ucb = UCB(tree.Qha[ba_idx], tree.Nh[b_idx], Nha, c)
         if ucb > max_ucb
             max_ucb = ucb
             opt_a = a
@@ -22,7 +25,15 @@ function UCB1action(planner::PFTDPWPlanner, tree::PFTDPWTree{S,A,O}, b_idx::Int,
     return opt_a::A, opt_idx::Int
 end
 
-function act_prog_widen(planner::PFTDPWPlanner, b_idx::Int)
+@inline function act_prog_widen(planner::PFTDPWPlanner, b_idx::Int)
+    if planner.sol.enable_action_pw
+        return progressive_widen(planner, b_idx)
+    else
+        return act_widen(planner, b_idx)
+    end
+end
+
+function progressive_widen(planner::PFTDPWPlanner, b_idx::Int)
     sol = planner.sol
     tree = planner.tree
 
@@ -36,4 +47,17 @@ function act_prog_widen(planner::PFTDPWPlanner, b_idx::Int)
     end
 
     return UCB1action(planner, tree, b_idx, c)
+end
+
+function act_widen(planner::PFTDPWPlanner, b_idx::Int)
+    sol = planner.sol
+    tree = planner.tree
+
+    if isempty(tree.b_children[b_idx])
+        for a in actions(planner.pomdp)
+            insert_action!(tree, b_idx, a)
+        end
+    end
+
+    return UCB1action(planner, tree, b_idx, sol.c)
 end

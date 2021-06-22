@@ -24,7 +24,7 @@ export PFTDPWTree, PFTDPWSolver, PFTDPWPlanner, RandomRollout
     b_rewards::Vector{Float64} = Float64[] # Map b' node index to immediate reward associated with trajectory bao where b' = τ(bao)
 
     bao_children::Dict{Tuple{Int,O},Int} = Dict{Tuple{Int,O},Int}() # (ba_idx,O) => bp_idx
-    ba_children::Vector{Vector{Int}} = Vector{Int}[] # Number of keys (ba_idx,O) under some ba node in ba_children (for PW)
+    ba_children::Vector{Vector{Int}} = Vector{Int}[] # ba_idx => [bp_idx, bp_idx, bp_idx, ...]
 
     n_b::Int = 0
     n_ba::Int = 0
@@ -62,6 +62,7 @@ end
     rng::RNG = Random.GLOBAL_RNG
     updater::UPD = NothingUpdater()
     check_repeat_obs::Bool = true
+    enable_action_pw::Bool = false
 end
 
 struct RandomRollout{A} <: Policy
