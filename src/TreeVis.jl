@@ -2,7 +2,8 @@ function D3Trees.D3Tree(tree::PFTDPWTree{S,A,O}; show_obs::Bool=true) where {S,A
 
     if isempty(tree.bao_children)
         show_obs = false
-        @warn "show_obs is true, but not observation labels found\n Make sure check_repeat_obs=true"
+        @warn """show_obs=true, but no observation labels found.
+        Make sure check_repeat_obs=true in solver to track observations"""
     end
 
     n_b = tree.n_b

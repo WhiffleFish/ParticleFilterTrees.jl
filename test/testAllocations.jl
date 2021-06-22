@@ -1,6 +1,6 @@
 @info "Load Packages..."
 using Pkg
-Pkg.activate(".")
+Pkg.activate(@__DIR___)
 using Profile
 using POMDPModels
 using PFTDPW

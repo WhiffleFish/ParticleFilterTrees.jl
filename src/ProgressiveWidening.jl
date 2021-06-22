@@ -6,6 +6,10 @@ function UCB(Q::Float64, Nh::Int, Nha::Int, c::Float64)::Float64
     return Nha > 0 ? Q + c*sqrt(log(Nh)/Nha) : Inf
 end
 
+function _unsafeUCB(Q::Float64, Nh::Int, Nha::Int, c::Float64)::Float64
+    return Q + c*sqrt(log(Nh)/Nha)
+end
+
 function UCB1action(planner::PFTDPWPlanner, tree::PFTDPWTree{S,A,O}, b_idx::Int, c::Float64) where {S,A,O}
 
     max_ucb = -Inf
@@ -15,7 +19,7 @@ function UCB1action(planner::PFTDPWPlanner, tree::PFTDPWTree{S,A,O}, b_idx::Int,
         Nha = tree.Nha[ba_idx]
         Nha == 0 && return a::A, ba_idx::Int
 
-        @inbounds ucb = UCB(tree.Qha[ba_idx], tree.Nh[b_idx], Nha, c)
+        @inbounds ucb = _unsafeUCB(tree.Qha[ba_idx], tree.Nh[b_idx], Nha, c)
         if ucb > max_ucb
             max_ucb = ucb
             opt_a = a

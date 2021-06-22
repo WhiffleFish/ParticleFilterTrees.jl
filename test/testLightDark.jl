@@ -3,15 +3,15 @@ using Distributions
 using BenchmarkTools
 using POMDPModelTools
 using POMDPs
-using POMCPOW
 using PFTDPW
+using D3Trees
 
 const R = 60
 const LIGHT_LOC = 10
 
-const pomdp = QuickPOMDP(
+const LightDark = QuickPOMDP(
     states = -R:R+1,                  # r+1 is a terminal state
-    actions = [-10, -1, 0, 1, 10],
+    actions = (-10, -1, 0, 1, 10),
     discount = 0.95,
     isterminal = s::Int -> s==R::Int+1,
     obstype = Float64,
@@ -37,19 +37,16 @@ const pomdp = QuickPOMDP(
     initialstate = POMDPModelTools.Uniform(div(-R::Int,2):div(R::Int,2))
 )
 
-solver = PFTDPWSolver(tree_queries=10_000, k_o=1, k_a=2, max_depth=20, c=100.0, n_particles=100, check_repeat_obs=false)
-planner = solve(solver, pomdp)
-@benchmark a_info = action_info(planner, initialstate(pomdp)) (seconds=120)
+solver = PFTDPWSolver(tree_queries=10_000, k_o=5, k_a=4, max_depth=30, c=100.0, n_particles=100, check_repeat_obs=false, enable_action_pw=false)
+planner = solve(solver, LightDark)
+@benchmark a_info = action_info(planner, initialstate(LightDark)) (seconds=120)
 
-@benchmark a_info = action_info(planner, initialstate(pomdp)) (seconds=120)
+@benchmark a_info = action_info(planner, initialstate(LightDark)) (seconds=120)
 
-@profiler a_info = action_info(planner, initialstate(pomdp))
+@profiler a_info = action_info(planner, initialstate(LightDark))
 
-a, info = action_info(planner, initialstate(pomdp))
-info[:tree]
+a, info = action_info(planner, initialstate(LightDark))
+tree= info[:tree]
+t = D3Tree(info[:tree])
 
-
-solver2 = POMCPOWSolver(tree_queries=100_000,check_repeat_obs=false)
-planner2 = solve(solver2, pomdp)
-
-@profiler a,info = action_info(planner2,initialstate(pomdp))
+inchrome(t)

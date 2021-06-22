@@ -85,7 +85,7 @@ function benchmark(pomdp::POMDP, planner1::Policy, planner2::Policy; depth::Int=
 end
 
 N = 100
-r_pft, r_pomcp = benchmark(pomdp, pft_planner, pomcpow_planner, N=N, depth=d)
+r_pft, r_pomcp = benchmark(LightDark, pft_planner, pomcpow_planner, N=N, depth=d)
 
 histogram([r_pft r_pomcp], alpha=0.5, labels=["PFT-DPW" "POMCPOW"], normalize=true, legend=:topright)
 title!("LightDark1D Benchmark\nt=$(t)s, d=$d, N=$N")

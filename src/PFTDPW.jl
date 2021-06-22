@@ -2,7 +2,6 @@ module PFTDPW
 
 using ParticleFilters # WeightedParticleBelief
 using POMDPSimulators # RolloutSimulator
-using POMDPPolicies
 using POMDPs
 using Parameters # @with_kw
 using Random # Random.GLOBAL_RNG
@@ -11,6 +10,7 @@ using D3Trees
 using POMDPModelTools
 import StatsBase
 using LinearAlgebra
+using RandomNumbers: Xorshifts
 
 export PFTDPWTree, PFTDPWSolver, PFTDPWPlanner, RandomRollout
 
@@ -50,30 +50,31 @@ export PFTDPWTree, PFTDPWSolver, PFTDPWPlanner, RandomRollout
 end
 
 @with_kw struct PFTDPWSolver{RNG<:AbstractRNG, UPD <:Updater} <: Solver
-    max_depth::Int = 20
-    n_particles::Int = 100
-    c::Float64 = 1.0
-    k_o::Float64 = 10.0
-    alpha_o::Float64 = 0.0 # Observation Progressive widening parameter
-    k_a::Float64 = 5.0
-    alpha_a::Float64 = 0.0 # Action Progressive widening parameter
-    tree_queries::Int = 1_000
-    max_time::Float64 = Inf # (seconds)
-    rng::RNG = Random.GLOBAL_RNG
-    updater::UPD = NothingUpdater()
+    max_depth::Int         = 20
+    n_particles::Int       = 100
+    c::Float64             = 1.0
+    k_o::Float64           = 10.0
+    alpha_o::Float64       = 0.0 # Observation Progressive widening parameter
+    k_a::Float64           = 5.0
+    alpha_a::Float64       = 0.0 # Action Progressive widening parameter
+    tree_queries::Int      = 1_000
+    max_time::Float64      = Inf # (seconds)
+    rng::RNG               = Xorshifts.Xoroshiro128Star()
+    updater::UPD           = NothingUpdater()
     check_repeat_obs::Bool = true
     enable_action_pw::Bool = false
 end
 
-struct RandomRollout{A} <: Policy
+struct RandomRollout{RNG<:AbstractRNG,  A} <: Policy
+    rng::RNG
     actions::A
 end
 
-RandomRollout(pomdp::POMDP) = RandomRollout(actions(pomdp))
+RandomRollout(pomdp::POMDP) = RandomRollout(Xorshifts.Xoroshiro128Star(),actions(pomdp))
 
-POMDPs.action(p::RandomRollout,b) = rand(p.actions)
+POMDPs.action(p::RandomRollout,b) = rand(p.rng, p.actions)
 
-mutable struct PFTDPWPlanner{M<:POMDP, SOL<:PFTDPWSolver, TREE<:PFTDPWTree, P<:Policy, A, O} <: Policy
+struct PFTDPWPlanner{M<:POMDP, SOL<:PFTDPWSolver, TREE<:PFTDPWTree, P<:Policy, A, O} <: Policy
     pomdp::M
     sol::SOL
     tree::TREE
