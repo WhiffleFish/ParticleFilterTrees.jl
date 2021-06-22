@@ -1,6 +1,10 @@
-function D3Tree(tree::PFTDPWTree{S,A,O}) where {S,A,O}
+function D3Trees.D3Tree(tree::PFTDPWTree{S,A,O}; show_obs::Bool=true) where {S,A,O}
 
-    maxN = max(maximum(tree.Nh[2:end]),maximum(tree.Nha))
+    if isempty(tree.bao_children)
+        show_obs = false
+        @warn "show_obs is true, but not observation labels found\n Make sure check_repeat_obs=true"
+    end
+
     n_b = tree.n_b
     n_ba = tree.n_ba
     children = Vector{Int}[Int[] for _ in 1:(n_b+n_ba)]
@@ -9,7 +13,16 @@ function D3Tree(tree::PFTDPWTree{S,A,O}) where {S,A,O}
     link_style = Vector{String}(undef, n_b+n_ba)
 
     a_dict = Dict{Int,A}()
-    # o_dict = Dict{Int,Float64}(bp_idx=>o for ((ba_idx,o),bp_idx) in tree.bao_children)
+    show_obs && ( o_dict = Dict{Int,O}(bp_idx=>o for ((ba_idx,o),bp_idx) in tree.bao_children) )
+
+    ba_parent = Dict{Int, Int}()
+    b_parent = Dict{Int,Int}(())
+
+    for (ba_idx,bp_list) in enumerate(tree.ba_children)
+        for bp_idx in bp_list
+            b_parent[bp_idx] = ba_idx
+        end
+    end
 
     for b_idx in 1:n_b
         r = round(tree.b_rewards[b_idx], sigdigits=3)
@@ -22,31 +35,51 @@ function D3Tree(tree::PFTDPWTree{S,A,O}) where {S,A,O}
             V = 0.0
         end
 
-
         tooltip[b_idx] = "b_idx = $b_idx\nr=$r"
         for (a, ba_idx) in tree.b_children[b_idx]
             push!(children[b_idx],ba_idx + n_b)
             a_dict[ba_idx] = a
+            ba_parent[ba_idx] = b_idx
         end
         if b_idx == 1
             link_style[b_idx] = ""
-            text[b_idx] = "<root>\nV=$(round(V;sigdigits=3))"
+            text[b_idx] = """
+                <root>
+                V=$(round(V;sigdigits=3))"""
         else
-            text[b_idx] = "N = $N\nV = $(round(V;sigdigits=3))"
-            stroke_width = link_width(N,maxN)
+            if show_obs
+                o = o_dict[b_idx]
+                o isa Float64 && (o = round(o;sigdigits=3))
+                text[b_idx] = """
+                    o = $o
+                    N = $N
+                    V = $(round(V;sigdigits=3))"""
+            else
+                text[b_idx] = """
+                    N = $N
+                    V = $(round(V;sigdigits=3))"""
+            end
+            Nha = tree.Nha[b_parent[b_idx]]
+            stroke_width = link_width(N,Nha)
             link_style[b_idx] = "stroke-width:$(stroke_width)px"
         end
     end
+
 
     for ba_idx in 1:n_ba
         Q = round(tree.Qha[ba_idx], sigdigits=3)
         a = a_dict[ba_idx]
         N = tree.Nha[ba_idx]
-        text[ba_idx + n_b] = "N = $N \na = $a \nQ = $Q"
+
+        text[ba_idx + n_b] = """
+            N = $N
+            a = $a
+            Q = $Q"""
+
         children[ba_idx + n_b] = tree.ba_children[ba_idx]
         tooltip[ba_idx + n_b] = "ba_idx = $ba_idx"
 
-        stroke_width = link_width(N,maxN)
+        stroke_width = link_width(N,tree.Nh[ba_parent[ba_idx]])
         link_style[ba_idx + n_b] = "stroke-width:$(stroke_width)px"
     end
 
@@ -60,5 +93,5 @@ function D3Tree(tree::PFTDPWTree{S,A,O}) where {S,A,O}
 end
 
 function link_width(N::Int, maxN::Int; max_width::Int=20)
-    return max(round(N/maxN, sigdigits=3)*max_width,1)
+    return max(round(sqrt(N/maxN), sigdigits=3)*max_width,1)
 end

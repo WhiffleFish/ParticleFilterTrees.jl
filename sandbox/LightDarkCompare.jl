@@ -13,25 +13,25 @@ using QuickPOMDPs
 using POMDPModelTools
 using Distributions
 
-r = 60
-light_loc = 10
+const R = 60
+const LIGHT_LOC = 10
 
-pomdp = QuickPOMDP(
-    states = -r:r+1,                  # r+1 is a terminal state
+const LightDark = QuickPOMDP(
+    states = -R:R+1,                  # r+1 is a terminal state
     actions = [-10, -1, 0, 1, 10],
     discount = 0.95,
-    isterminal = s -> !(s in -r:r),
+    isterminal = s::Int -> s==R::Int+1,
     obstype = Float64,
 
-    transition = function (s, a)
+    transition = function (s::Int, a::Int)
         if a == 0
-            return Deterministic(r+1)
+            return Deterministic{Int}(R::Int+1)
         else
-            return Deterministic(clamp(s+a, -r, r))
+            return Deterministic{Int}(clamp(s+a, -R::Int, R::Int))
         end
     end,
 
-    observation = (s, a, sp) -> Normal(sp, abs(sp - light_loc) + 0.0001),
+    observation = (s, a, sp) -> Normal(sp, abs(sp - LIGHT_LOC::Int) + 1e-3),
 
     reward = function (s, a, sp, o)
         if a == 0
@@ -41,7 +41,7 @@ pomdp = QuickPOMDP(
         end
     end,
 
-    initialstate = POMDPModelTools.Uniform(div(-r,2):div(r,2))
+    initialstate = POMDPModelTools.Uniform(div(-R::Int,2):div(R::Int,2))
 )
 
 t = 0.1
@@ -50,24 +50,25 @@ pft_solver = PFTDPWSolver(
     max_time=t,
     tree_queries=100_000,
     k_o=10.0,
-    alpha_o=0.5,
-    k_a=2,
+    alpha_o=1/20,
+    k_a=4,
     max_depth=d,
-    c=10.0,
+    c=100.0,
     n_particles=100,
+    enable_action_pw = false
 )
 
-pft_planner = solve(pft_solver, pomdp)
+pft_planner = solve(pft_solver, LightDark)
 
 pomcpow_solver = POMCPOWSolver(
     max_time=t,
-    tree_queries = 100_000,
+    tree_queries = 10_000_000,
     max_depth=d,
-    criterion = MaxUCB(10.0),
+    criterion = MaxUCB(95.0),
     tree_in_info=false,
     enable_action_pw = false
 )
-pomcpow_planner = solve(pomcpow_solver, pomdp)
+pomcpow_planner = solve(pomcpow_solver, LightDark)
 
 function benchmark(pomdp::POMDP, planner1::Policy, planner2::Policy; depth::Int=20, N::Int=100)
     r1Hist = sizehint!(Float64[],N)

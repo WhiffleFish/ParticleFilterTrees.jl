@@ -13,3 +13,9 @@ planner = solve(solver, baby)
 @benchmark a_info = action_info(planner, initialstate(baby)) (seconds=60)
 
 @profiler a_info = action_info(planner, initialstate(baby))
+
+a,info = action_info(planner, initialstate(baby))
+t = D3Tree(info[:tree])
+inchrome(t)
+
+info[:tree].bao_children

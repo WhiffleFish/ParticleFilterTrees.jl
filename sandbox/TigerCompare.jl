@@ -8,12 +8,12 @@ using Plots
 using BeliefUpdaters
 using StatsBase
 using PFTDPW
-pomdp = TigerPOMDP()
+tiger = TigerPOMDP()
 
 t = 0.1
 d=10
-pft_solver = PFTDPWSolver(max_time=t, tree_queries=100_000, k_o=1, k_a=2, max_depth=d, c=100.0, n_particles=50)
-pft_planner = solve(pft_solver, pomdp)
+pft_solver = PFTDPWSolver(max_time=t, tree_queries=100_000, k_o=1, k_a=2, max_depth=d, c=100.0, n_particles=50, enable_action_pw=false)
+pft_planner = solve(pft_solver, tiger)
 
 pomcpow_solver = POMCPOWSolver(
     max_time=t,
@@ -23,7 +23,7 @@ pomcpow_solver = POMCPOWSolver(
     enable_action_pw=false,
     k_action=2,
     tree_in_info=false)
-pomcpow_planner = solve(pomcpow_solver, pomdp)
+pomcpow_planner = solve(pomcpow_solver, tiger)
 
 function benchmark(pomdp::POMDP, planner1::Policy, planner2::Policy; depth::Int=20, N::Int=100)
     r1Hist = Float64[]
@@ -40,7 +40,7 @@ function benchmark(pomdp::POMDP, planner1::Policy, planner2::Policy; depth::Int=
 end
 
 N = 100
-r_pft, r_pomcp = benchmark(pomdp, pft_planner, pomcpow_planner, N=N)
+r_pft, r_pomcp = benchmark(tiger, pft_planner, pomcpow_planner, N=N)
 
 histogram([r_pft r_pomcp], alpha=0.5, labels=["PFT-DPW" "POMCPOW"], normalize=true, bins=20, legend=:topleft)
 title!("Tiger Benchmark\nt=$(t)s, d=$d, N=$N")
