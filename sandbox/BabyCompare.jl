@@ -11,10 +11,27 @@ baby = BabyPOMDP()
 
 t = 0.1
 d=20
-pft_solver = PFTDPWSolver(max_time=t, tree_queries=100_000, k_o=1, k_a=2, max_depth=d, c=100.0, n_particles=100, enable_action_pw = false)
+pft_solver = PFTDPWSolver(
+    max_time=t,
+    tree_queries=100_000,
+    k_o = 5,
+    k_a = 2,
+    max_depth = d,
+    c = 100.0,
+    n_particles = 100,
+    enable_action_pw = false,
+    check_repeat_obs = true
+)
 pft_planner = solve(pft_solver, baby)
 
-pomcpow_solver = POMCPOWSolver(max_time=t, tree_queries = 1_000_000, max_depth=d, criterion = MaxUCB(100.0), tree_in_info=true)
+pomcpow_solver = POMCPOWSolver(
+    max_time=t,
+    tree_queries = 1_000_000,
+    max_depth=d,
+    criterion = MaxUCB(100.0),
+    tree_in_info=true,
+    enable_action_pw=false
+)
 pomcpow_planner = solve(pomcpow_solver, baby)
 
 function benchmark(pomdp::POMDP, planner1::Policy, planner2::Policy; depth::Int=20, N::Int=100)

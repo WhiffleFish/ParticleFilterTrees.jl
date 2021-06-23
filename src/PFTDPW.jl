@@ -14,7 +14,7 @@ using RandomNumbers: Xorshifts
 
 export PFTDPWTree, PFTDPWSolver, PFTDPWPlanner, RandomRollout
 
-@with_kw mutable struct PFTDPWTree{S,A,O}
+@with_kw struct PFTDPWTree{S,A,O}
     Nh::Vector{Int} = Int[]
     Nha::Vector{Int} = Int[] # Number of times a history-action node has been visited
     Qha::Vector{Float64} = Float64[] # Map ba node to associated Q value
@@ -25,11 +25,9 @@ export PFTDPWTree, PFTDPWSolver, PFTDPWPlanner, RandomRollout
 
     bao_children::Dict{Tuple{Int,O},Int} = Dict{Tuple{Int,O},Int}() # (ba_idx,O) => bp_idx
     ba_children::Vector{Vector{Int}} = Vector{Int}[] # ba_idx => [bp_idx, bp_idx, bp_idx, ...]
+    obs_weights::Dict{Int,Vector{Int}} = Dict{Int,Vector{Int}}()
 
-    n_b::Int = 0
-    n_ba::Int = 0
-
-    function PFTDPWTree{S,A,O}(sz::Int) where {S,A,O}
+    function PFTDPWTree{S,A,O}(sz::Int, check_repeat_obs::Bool) where {S,A,O}
         sz = min(sz, 100_000)
         return new(
             sizehint!(Int[], sz),
@@ -40,11 +38,9 @@ export PFTDPWTree, PFTDPWSolver, PFTDPWPlanner, RandomRollout
             sizehint!(Vector{Tuple{A,Int}}[], sz),
             sizehint!(Float64[], sz),
 
-            sizehint!(Dict{Tuple{Int,O},Int}(), sz),
+            sizehint!(Dict{Tuple{Int,O},Int}(), check_repeat_obs ? sz : 0),
             sizehint!(Vector{Int}[], sz),
-
-            0,
-            0
+            sizehint!(Dict{Int,Vector{Int}}(), check_repeat_obs ? sz : 0)
             )
     end
 end

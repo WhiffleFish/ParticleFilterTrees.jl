@@ -19,7 +19,7 @@ function rollout(planner::PFTDPWPlanner, b::WeightedParticleBelief, d::Int)::Flo
 end
 
 
-function search(planner::PFTDPWPlanner, b_idx::Int, d::Int)::Float64
+function no_obs_check_search(planner::PFTDPWPlanner, b_idx::Int, d::Int)::Float64
     tree = planner.tree
     pomdp = planner.pomdp
     sol = planner.sol
@@ -32,19 +32,59 @@ function search(planner::PFTDPWPlanner, b_idx::Int, d::Int)::Float64
     if length(tree.ba_children[ba_idx]) <= sol.k_o*tree.Nha[ba_idx]^sol.alpha_o
         bp, o, r = GenBelief(planner, pomdp, tree.b[b_idx], a)
 
+        insert_belief!(tree, bp, ba_idx, o, r, planner)
+        ro = rollout(planner, bp, d-1)
+        total = r + discount(pomdp)*ro
+
+    else
+        bp_idx = rand(tree.ba_children[ba_idx])
+        r = tree.b_rewards[bp_idx]
+        total = r + discount(pomdp)*no_obs_check_search(planner, bp_idx, d-1)
+    end
+    tree.Nh[b_idx] += 1
+    tree.Nha[ba_idx] += 1
+
+    tree.Qha[ba_idx] = incremental_avg(tree.Qha[ba_idx], total, tree.Nha[ba_idx])
+
+    return total::Float64
+end
+
+function obs_check_search(planner::PFTDPWPlanner, b_idx::Int, d::Int)::Float64
+    tree = planner.tree
+    pomdp = planner.pomdp
+    sol = planner.sol
+
+    if iszero(d) || isterminalbelief(pomdp, tree.b[b_idx])
+        return 0.0
+    end
+
+    a, ba_idx = act_prog_widen(planner, b_idx)
+    if sum(tree.obs_weights[ba_idx]) <= sol.k_o*tree.Nha[ba_idx]^sol.alpha_o
+        bp, o, r = GenBelief(planner, pomdp, tree.b[b_idx], a)
+
         if !haskey(tree.bao_children, (ba_idx,o))
             insert_belief!(tree, bp, ba_idx, o, r, planner)
             ro = rollout(planner, bp, d-1)
             total = r + discount(pomdp)*ro
         else
-            bp_idx = tree.bao_children[(ba_idx,o)]
-            r = tree.b_rewards[bp_idx]
-            total = r + discount(pomdp)*search(planner, bp_idx, d-1)
+            @inbounds begin
+                bp_idx = tree.bao_children[(ba_idx,o)]
+
+                ow = tree.obs_weights[ba_idx]
+                w_loc = findfirst(x->x==bp_idx, tree.ba_children[ba_idx])
+                ow[w_loc] += 1
+
+                r = tree.b_rewards[bp_idx]
+            end
+            total = r + discount(pomdp)*obs_check_search(planner, bp_idx, d-1)
         end
     else
-        bp_idx = rand(tree.ba_children[ba_idx])
+
+        w = StatsBase.weights(tree.obs_weights[ba_idx])
+        bp_idx = tree.ba_children[ba_idx][StatsBase.sample(w)]
+
         r = tree.b_rewards[bp_idx]
-        total = r + discount(pomdp)*search(planner, bp_idx, d-1)
+        total = r + discount(pomdp)*obs_check_search(planner, bp_idx, d-1)
     end
     tree.Nh[b_idx] += 1
     tree.Nha[ba_idx] += 1
@@ -63,7 +103,7 @@ function POMDPs.solve(sol::PFTDPWSolver, pomdp::POMDP{S,A,O})::PFTDPWPlanner whe
             error("Action space should have some defined length if enable_action_pw=false")
         end
     end
-    return PFTDPWPlanner(pomdp, sol, PFTDPWTree{S,A,O}(sol.tree_queries), RandomRollout(pomdp), a, o)
+    return PFTDPWPlanner(pomdp, sol, PFTDPWTree{S,A,O}(sol.tree_queries, sol.check_repeat_obs), RandomRollout(pomdp), a, o)
 end
 
 function POMDPModelTools.action_info(planner::PFTDPWPlanner, b)
@@ -81,11 +121,17 @@ function POMDPModelTools.action_info(planner::PFTDPWPlanner, b)
     insert_root!(planner.tree, b, sol.n_particles)
 
     iter = 0
-    while (time()-t0 < max_time) && (iter < max_iter)
-        search(planner, 1, max_depth)
-        iter += 1
+    if planner.sol.check_repeat_obs
+        while (time()-t0 < max_time) && (iter < max_iter)
+            obs_check_search(planner, 1, max_depth)
+            iter += 1
+        end
+    else
+        while (time()-t0 < max_time) && (iter < max_iter)
+            no_obs_check_search(planner, 1, max_depth)
+            iter += 1
+        end
     end
-
     a, a_idx = UCB1action(planner, planner.tree, 1, 0.0)
     if a_idx == 0; a = rand(actions(pomdp)); end
 
@@ -115,9 +161,7 @@ function Base.empty!(tree::PFTDPWTree)
 
     empty!(tree.bao_children)
     empty!(tree.ba_children)
-
-    tree.n_b = 0
-    tree.n_ba = 0
+    empty!(tree.obs_weights)
 
     nothing
 end

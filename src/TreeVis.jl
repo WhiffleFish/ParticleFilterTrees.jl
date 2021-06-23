@@ -6,8 +6,8 @@ function D3Trees.D3Tree(tree::PFTDPWTree{S,A,O}; show_obs::Bool=true) where {S,A
         Make sure check_repeat_obs=true in solver to track observations"""
     end
 
-    n_b = tree.n_b
-    n_ba = tree.n_ba
+    n_b = length(tree.b)
+    n_ba = length(tree.ba_children)
     children = Vector{Int}[Int[] for _ in 1:(n_b+n_ba)]
     text = Vector{String}(undef, n_b+n_ba)
     tooltip = Vector{String}(undef, n_b+n_ba)
