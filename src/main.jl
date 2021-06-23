@@ -18,82 +18,6 @@ function rollout(planner::PFTDPWPlanner, b::WeightedParticleBelief, d::Int)::Flo
     return r::Float64
 end
 
-
-function no_obs_check_search(planner::PFTDPWPlanner, b_idx::Int, d::Int)::Float64
-    tree = planner.tree
-    pomdp = planner.pomdp
-    sol = planner.sol
-
-    if iszero(d) || isterminalbelief(pomdp, tree.b[b_idx])
-        return 0.0
-    end
-
-    a, ba_idx = act_prog_widen(planner, b_idx)
-    if length(tree.ba_children[ba_idx]) <= sol.k_o*tree.Nha[ba_idx]^sol.alpha_o
-        bp, o, r = GenBelief(planner, pomdp, tree.b[b_idx], a)
-
-        insert_belief!(tree, bp, ba_idx, o, r, planner)
-        ro = rollout(planner, bp, d-1)
-        total = r + discount(pomdp)*ro
-
-    else
-        bp_idx = rand(tree.ba_children[ba_idx])
-        r = tree.b_rewards[bp_idx]
-        total = r + discount(pomdp)*no_obs_check_search(planner, bp_idx, d-1)
-    end
-    tree.Nh[b_idx] += 1
-    tree.Nha[ba_idx] += 1
-
-    tree.Qha[ba_idx] = incremental_avg(tree.Qha[ba_idx], total, tree.Nha[ba_idx])
-
-    return total::Float64
-end
-
-function obs_check_search(planner::PFTDPWPlanner, b_idx::Int, d::Int)::Float64
-    tree = planner.tree
-    pomdp = planner.pomdp
-    sol = planner.sol
-
-    if iszero(d) || isterminalbelief(pomdp, tree.b[b_idx])
-        return 0.0
-    end
-
-    a, ba_idx = act_prog_widen(planner, b_idx)
-    if sum(tree.obs_weights[ba_idx]) <= sol.k_o*tree.Nha[ba_idx]^sol.alpha_o
-        bp, o, r = GenBelief(planner, pomdp, tree.b[b_idx], a)
-
-        if !haskey(tree.bao_children, (ba_idx,o))
-            insert_belief!(tree, bp, ba_idx, o, r, planner)
-            ro = rollout(planner, bp, d-1)
-            total = r + discount(pomdp)*ro
-        else
-            @inbounds begin
-                bp_idx = tree.bao_children[(ba_idx,o)]
-
-                ow = tree.obs_weights[ba_idx]
-                w_loc = findfirst(x->x==bp_idx, tree.ba_children[ba_idx])
-                ow[w_loc] += 1
-
-                r = tree.b_rewards[bp_idx]
-            end
-            total = r + discount(pomdp)*obs_check_search(planner, bp_idx, d-1)
-        end
-    else
-
-        w = StatsBase.weights(tree.obs_weights[ba_idx])
-        bp_idx = tree.ba_children[ba_idx][StatsBase.sample(w)]
-
-        r = tree.b_rewards[bp_idx]
-        total = r + discount(pomdp)*obs_check_search(planner, bp_idx, d-1)
-    end
-    tree.Nh[b_idx] += 1
-    tree.Nha[ba_idx] += 1
-
-    tree.Qha[ba_idx] = incremental_avg(tree.Qha[ba_idx], total, tree.Nha[ba_idx])
-
-    return total::Float64
-end
-
 function POMDPs.solve(sol::PFTDPWSolver, pomdp::POMDP{S,A,O})::PFTDPWPlanner where {S,A,O}
     a, o = get_placeholders(pomdp)
     if !sol.enable_action_pw
@@ -132,6 +56,7 @@ function POMDPModelTools.action_info(planner::PFTDPWPlanner, b)
             iter += 1
         end
     end
+
     a, a_idx = UCB1action(planner, planner.tree, 1, 0.0)
     if a_idx == 0; a = rand(actions(pomdp)); end
 

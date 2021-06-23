@@ -85,6 +85,7 @@ PFTDPWPlanner(pomdp::POMDP,sol::PFTDPWSolver,tree::PFTDPWTree) = PFTDPWPlanner(p
 include("ProgressiveWidening.jl")
 include("Generator.jl")
 include("TreeConstruction.jl")
+include("search.jl")
 include("main.jl")
 include("TreeVis.jl")
 
