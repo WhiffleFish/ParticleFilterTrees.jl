@@ -14,12 +14,14 @@ using RandomNumbers: Xorshifts
 
 export PFTDPWTree, PFTDPWSolver, PFTDPWPlanner, RandomRollout
 
+include("belief.jl")
+
 @with_kw struct PFTDPWTree{S,A,O}
     Nh::Vector{Int} = Int[]
     Nha::Vector{Int} = Int[] # Number of times a history-action node has been visited
     Qha::Vector{Float64} = Float64[] # Map ba node to associated Q value
 
-    b::Vector{WeightedParticleBelief{S}} = WeightedParticleBelief{S}[]
+    b::Vector{PFTBelief{S}} = PFTBelief{S}[]
     b_children::Vector{Vector{Tuple{A,Int}}} = Vector{Tuple{A,Int}}[] # b_idx => [(a,ba_idx), ...]
     b_rewards::Vector{Float64} = Float64[] # Map b' node index to immediate reward associated with trajectory bao where b' = τ(bao)
 
@@ -34,7 +36,7 @@ export PFTDPWTree, PFTDPWSolver, PFTDPWPlanner, RandomRollout
             sizehint!(Int[], sz),
             sizehint!(Float64[], sz),
 
-            sizehint!(WeightedParticleBelief{S}[], sz),
+            sizehint!(PFTBelief{S}[], sz),
             sizehint!(Vector{Tuple{A,Int}}[], sz),
             sizehint!(Float64[], sz),
 

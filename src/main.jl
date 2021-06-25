@@ -1,7 +1,7 @@
 """
 Return weighted average rollout
 """
-function rollout(planner::PFTDPWPlanner, b::WeightedParticleBelief, d::Int)::Float64
+function rollout(planner::PFTDPWPlanner, b::PFTBelief, d::Int)::Float64
     r = 0.0
     sim = RolloutSimulator(rng = planner.sol.rng, max_steps = d)
     for (s,w) in weighted_particles(b)
@@ -71,7 +71,7 @@ function POMDPs.action(planner::PFTDPWPlanner, b)
     return first(action_info(planner, b))
 end
 
-function isterminalbelief(pomdp::POMDP, b::WeightedParticleBelief)
+function isterminalbelief(pomdp::POMDP, b::PFTBelief)
     all(isterminal(pomdp, s) for s in particles(b))
 end
 

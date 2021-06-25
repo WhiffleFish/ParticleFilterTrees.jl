@@ -3,12 +3,12 @@ Insert b node into tree
 
 # Arguments
 - `tree:::PFTDPWTree` - Tree into which the belief is inserted
-- `b::WeightedParticleBelief` - Weighted particles representing belief
+- `b::PFTBelief` - Weighted particles representing belief
 - `ba_idx::Int` - index id for belief-action node used to generate new belief
 - `obs` - observation received from G(s,a)
 - `r::Float64` - reward for going from ba node with obs o to node b
 """
-function insert_belief!(tree::PFTDPWTree{S,A,O}, b::WeightedParticleBelief{S}, ba_idx::Int, obs::O, r::Float64, planner::PFTDPWPlanner)::Nothing where {S,A,O}
+function insert_belief!(tree::PFTDPWTree{S,A,O}, b::PFTBelief{S}, ba_idx::Int, obs::O, r::Float64, planner::PFTDPWPlanner)::Nothing where {S,A,O}
     n_b = length(tree.b)+1
     push!(tree.b, b)
     push!(tree.Nh, 0)
@@ -32,7 +32,7 @@ end
 function initial_belief(b, n_p::Int)
     s = [rand(b) for _ in 1:n_p]
     w = fill(inv(n_p), n_p)
-    return WeightedParticleBelief(s,w)
+    return PFTBelief(s,w)
 end
 
 function insert_root!(tree::PFTDPWTree{S,A,O}, b, n_p::Int)::Nothing where {S,A,O}
