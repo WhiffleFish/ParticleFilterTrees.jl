@@ -39,8 +39,7 @@ function obs_check_search(planner::PFTDPWPlanner, b_idx::Int, d::Int)::Float64
     if sum(tree.obs_weights[ba_idx]) <= sol.k_o*tree.Nha[ba_idx]^sol.alpha_o
 
         b = tree.b[b_idx]
-        non_term_weights = StatsBase.weights([w*!isterminal(pomdp,s) for (s,w) in weighted_particles(b)])
-        p_idx = StatsBase.sample(non_term_weights)
+        p_idx = non_terminal_sample(sol.rng, pomdp, b)
         sample_s = particle(b, p_idx)
         sample_sp, o, sample_r = @gen(:sp,:o,:r)(pomdp, sample_s, a)
 

@@ -72,14 +72,14 @@ RandomRollout(pomdp::POMDP) = RandomRollout(Xorshifts.Xoroshiro128Star(),actions
 
 POMDPs.action(p::RandomRollout,b) = rand(p.rng, p.actions)
 
-struct PFTDPWPlanner{M<:POMDP, SOL<:PFTDPWSolver, TREE<:PFTDPWTree, P<:Policy, A, O} <: Policy
+struct PFTDPWPlanner{M<:POMDP, SOL<:PFTDPWSolver, TREE<:PFTDPWTree, P<:Policy, A} <: Policy
     pomdp::M
     sol::SOL
     tree::TREE
     rollout_policy::P
 
     _placeholder_a::A
-    _placeholder_o::O
+    _SA::Int # Size of action space (for sizehinting)
 end
 
 PFTDPWPlanner(pomdp::POMDP,sol::PFTDPWSolver,tree::PFTDPWTree) = PFTDPWPlanner(pomdp, sol, tree, RandomRollout(pomdp))

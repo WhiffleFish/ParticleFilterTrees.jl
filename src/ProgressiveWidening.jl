@@ -46,7 +46,7 @@ function progressive_widen(planner::PFTDPWPlanner, b_idx::Int)
     if length(tree.b_children[b_idx]) <= k_a*tree.Nh[b_idx]^alpha_a
         a = next_action(planner.pomdp)
         if isempty(filter(x->x[1] == a, tree.b_children[b_idx]))
-            insert_action!(tree, b_idx, a, planner.sol.check_repeat_obs)
+            insert_action!(planner, tree, b_idx, a, planner.sol.check_repeat_obs)
         end
     end
 
@@ -59,7 +59,7 @@ function act_widen(planner::PFTDPWPlanner, b_idx::Int)
 
     if isempty(tree.b_children[b_idx])
         for a in actions(planner.pomdp)
-            insert_action!(tree, b_idx, a, planner.sol.check_repeat_obs)
+            insert_action!(planner, tree, b_idx, a, planner.sol.check_repeat_obs)
         end
     end
 

@@ -9,14 +9,16 @@ function GenBelief(
     N = n_particles(b)
     weighted_return = 0.0
 
-    aug_weights = StatsBase.weights(Float64[w*!isterminal(pomdp,s) for (s,w) in weighted_particles(b)])
-    p_idx = StatsBase.sample(aug_weights)
+    p_idx = non_terminal_sample(rng, pomdp, b)
 
     sample_s = particle(b, p_idx)
 
     sample_sp, sample_obs, sample_r = @gen(:sp,:o,:r)(pomdp, sample_s, a, rng)
 
-    bp = PFTBelief(Vector{S}(undef, N), Vector{Float64}(undef, N))
+    # bp = PFTBelief(Vector{S}(undef, N), Vector{Float64}(undef, N), BitVector(undef, N))
+    bp_particles = Vector{S}(undef, N)
+    bp_weights = Vector{Float64}(undef, N)
+    bp_terminal_ws = 0.0
 
     for (i,(s,w)) in enumerate(weighted_particles(b))
         # Propagation
@@ -32,20 +34,24 @@ function GenBelief(
 
         # Reweighting
         @inbounds begin
-            bp.particles[i] = sp
+            bp_particles[i] = sp
             w = weight(b, i)
-            bp.weights[i] = w*pdf(POMDPs.observation(pomdp, s, a, sp), sample_obs)
+            bp_w = w*pdf(POMDPs.observation(pomdp, s, a, sp), sample_obs)
+            bp_weights[i] = bp_w
         end
-
         weighted_return += r*w
     end
 
-    if !iszero(sum(bp.weights))
-        normalize!(bp.weights, 1)
+    if !iszero(sum(bp_weights))
+        normalize!(bp_weights, 1)
     else
-        fill!(bp.weights, inv(N))
+        fill!(bp_weights, inv(N))
     end
 
+    for (s,w) in zip(bp_particles, bp_weights)
+        !isterminal(pomdp, s) && (bp_terminal_ws += w)
+    end
+    bp = PFTBelief(bp_particles, bp_weights, bp_terminal_ws)
     return bp::PFTBelief{S}, sample_obs::O, weighted_return::Float64
 end
 
@@ -65,7 +71,9 @@ function ObsCheckGenBelief(
     N = n_particles(b)
     weighted_return = 0.0
 
-    bp = PFTBelief(Vector{S}(undef, N), Vector{Float64}(undef, N))
+    bp_particles = Vector{S}(undef, N)
+    bp_weights = Vector{Float64}(undef, N)
+    bp_terminal_ws = 0.0
 
     for (i,(s,w)) in enumerate(weighted_particles(b))
         # Propagation
@@ -81,19 +89,25 @@ function ObsCheckGenBelief(
 
         # Reweighting
         @inbounds begin
-            bp.particles[i] = sp
+            bp_particles[i] = sp
             w = weight(b, i)
-            bp.weights[i] = w*pdf(POMDPs.observation(pomdp, s, a, sp), o)
+            bp_weights[i] = w*pdf(POMDPs.observation(pomdp, s, a, sp), o)
         end
 
         weighted_return += r*w
     end
 
-    if !iszero(sum(bp.weights))
-        normalize!(bp.weights, 1)
+    if !iszero(sum(bp_weights))
+        normalize!(bp_weights, 1)
     else
-        fill!(bp.weights, inv(N))
+        fill!(bp_weights, inv(N))
     end
+
+    for (s,w) in zip(bp_particles, bp_weights)
+        !isterminal(pomdp, s) && (bp_terminal_ws += w)
+    end
+
+    bp = PFTBelief(bp_particles, bp_weights, bp_terminal_ws)
 
     return bp::PFTBelief{S}, weighted_return::Float64
 end

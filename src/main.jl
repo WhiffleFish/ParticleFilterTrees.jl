@@ -19,15 +19,20 @@ function rollout(planner::PFTDPWPlanner, b::PFTBelief, d::Int)::Float64
 end
 
 function POMDPs.solve(sol::PFTDPWSolver, pomdp::POMDP{S,A,O})::PFTDPWPlanner where {S,A,O}
-    a, o = get_placeholders(pomdp)
+    act = actions(pomdp)
+    a = rand(act)
+
     if !sol.enable_action_pw
         try
-            @assert length(actions(pomdp)) < Inf
+            SA = length(act)
+            @assert SA < Inf
         catch e
             error("Action space should have some defined length if enable_action_pw=false")
         end
+    else
+        SA = -1
     end
-    return PFTDPWPlanner(pomdp, sol, PFTDPWTree{S,A,O}(sol.tree_queries, sol.check_repeat_obs), RandomRollout(pomdp), a, o)
+    return PFTDPWPlanner(pomdp, sol, PFTDPWTree{S,A,O}(sol.tree_queries, sol.check_repeat_obs), RandomRollout(pomdp), a, SA)
 end
 
 function POMDPModelTools.action_info(planner::PFTDPWPlanner, b)
@@ -42,7 +47,7 @@ function POMDPModelTools.action_info(planner::PFTDPWPlanner, b)
     A = actiontype(pomdp)
 
     empty!(planner.tree)
-    insert_root!(planner.tree, b, sol.n_particles)
+    insert_root!(planner.tree, pomdp, b, sol.n_particles)
 
     iter = 0
     if planner.sol.check_repeat_obs
@@ -89,11 +94,4 @@ function Base.empty!(tree::PFTDPWTree)
     empty!(tree.obs_weights)
 
     nothing
-end
-
-function get_placeholders(pomdp::POMDP{S,A,O}) where {S,A,O}
-    a = rand(actions(pomdp))
-    s = rand(initialstate(pomdp))
-    o = @gen(:o)(pomdp,s,a)
-    return a::A, o::O
 end

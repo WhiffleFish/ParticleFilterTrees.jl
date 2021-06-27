@@ -18,8 +18,7 @@ function insert_belief!(tree::PFTDPWTree{S,A,O}, b::PFTBelief{S}, ba_idx::Int, o
     if planner.sol.enable_action_pw
         push!(tree.b_children, Tuple{A,Int}[])
     else
-        L = length(actions(planner.pomdp))
-        push!(tree.b_children, sizehint!(Tuple{A,Int}[],L))
+        push!(tree.b_children, sizehint!(Tuple{A,Int}[],planner._SA))
     end
 
     if planner.sol.check_repeat_obs
@@ -29,15 +28,24 @@ function insert_belief!(tree::PFTDPWTree{S,A,O}, b::PFTBelief{S}, ba_idx::Int, o
     nothing
 end
 
-function initial_belief(b, n_p::Int)
-    s = [rand(b) for _ in 1:n_p]
-    w = fill(inv(n_p), n_p)
-    return PFTBelief(s,w)
+function initial_belief(pomdp, b, n_p::Int)
+    s = Vector{statetype(pomdp)}(undef, n_p)
+    w_i = inv(n_p)
+    w = fill(w_i, n_p)
+    term_ws = 0.0
+
+    for i in 1:n_p
+        s_i = rand(b)
+        s[i] = s_i
+        !isterminal(pomdp, s_i) && (term_ws += w_i)
+    end
+
+    return PFTBelief(s, w, term_ws)
 end
 
-function insert_root!(tree::PFTDPWTree{S,A,O}, b, n_p::Int)::Nothing where {S,A,O}
+function insert_root!(tree::PFTDPWTree{S,A,O}, pomdp, b, n_p::Int)::Nothing where {S,A,O}
     n_b = length(tree.b)+1
-    particle_b = initial_belief(b, n_p)
+    particle_b = initial_belief(pomdp, b, n_p)
 
     push!(tree.b, particle_b)
     push!(tree.b_children, Tuple{A,Int}[])
@@ -49,15 +57,23 @@ end
 """
 Insert ba node into tree
 """
-function insert_action!(tree::PFTDPWTree{S,A,O}, b_idx::Int, a::A, check_repeat_obs::Bool)::Nothing where {S,A,O}
+function insert_action!(planner::PFTDPWPlanner, tree::PFTDPWTree{S,A,O}, b_idx::Int, a::A, check_repeat_obs::Bool)::Nothing where {S,A,O}
     n_ba = length(tree.ba_children)+1
     push!(tree.b_children[b_idx], (a,n_ba))
-    push!(tree.ba_children, Int[])
+    if iszero(planner.sol.alpha_o)
+        push!(tree.ba_children, sizehint!(Int[],Int(planner.sol.k_o)))
+    else
+        push!(tree.ba_children, Int[])
+    end
     push!(tree.Nha, 0)
     push!(tree.Qha, 0.0)
 
     if check_repeat_obs
-        tree.obs_weights[n_ba] = Int[]
+        if iszero(planner.sol.alpha_o)
+            tree.obs_weights[n_ba] = sizehint!(Int[],Int(planner.sol.k_o))
+        else
+            tree.obs_weights[n_ba] = Int[]
+        end
     end
     nothing
 end
