@@ -1,6 +1,5 @@
 module PFTDPW
 
-using ParticleFilters # WeightedParticleBelief
 using POMDPSimulators # RolloutSimulator
 using POMDPs
 using Parameters # @with_kw
@@ -27,7 +26,7 @@ include("belief.jl")
 
     bao_children::Dict{Tuple{Int,O},Int} = Dict{Tuple{Int,O},Int}() # (ba_idx,O) => bp_idx
     ba_children::Vector{Vector{Int}} = Vector{Int}[] # ba_idx => [bp_idx, bp_idx, bp_idx, ...]
-    obs_weights::Dict{Int,Vector{Int}} = Dict{Int,Vector{Int}}()
+    obs_weights::Dict{Int,StatsBase.Weights{Int, Int, Vector{Int}}} = Dict{Int,StatsBase.Weights{Int, Int, Vector{Int}}}()
 
     function PFTDPWTree{S,A,O}(sz::Int, check_repeat_obs::Bool) where {S,A,O}
         sz = min(sz, 100_000)
@@ -42,7 +41,7 @@ include("belief.jl")
 
             sizehint!(Dict{Tuple{Int,O},Int}(), check_repeat_obs ? sz : 0),
             sizehint!(Vector{Int}[], sz),
-            sizehint!(Dict{Int,Vector{Int}}(), check_repeat_obs ? sz : 0)
+            sizehint!(Dict{Int,StatsBase.Weights{Int, Int, Vector{Int}}}(), check_repeat_obs ? sz : 0)
             )
     end
 end

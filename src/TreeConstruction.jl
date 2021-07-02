@@ -23,7 +23,8 @@ function insert_belief!(tree::PFTDPWTree{S,A,O}, b::PFTBelief{S}, ba_idx::Int, o
 
     if planner.sol.check_repeat_obs
         tree.bao_children[(ba_idx,obs)] = n_b
-        push!(tree.obs_weights[ba_idx],1)
+        push!(tree.obs_weights[ba_idx].values,1)
+        tree.obs_weights[ba_idx].sum += 1
     end
     nothing
 end
@@ -70,9 +71,11 @@ function insert_action!(planner::PFTDPWPlanner, tree::PFTDPWTree{S,A,O}, b_idx::
 
     if check_repeat_obs
         if iszero(planner.sol.alpha_o)
-            tree.obs_weights[n_ba] = sizehint!(Int[],Int(planner.sol.k_o))
+            tree.obs_weights[n_ba] = StatsBase.weights(
+                sizehint!(Int[],Int(planner.sol.k_o))
+                )
         else
-            tree.obs_weights[n_ba] = Int[]
+            tree.obs_weights[n_ba] = StatsBase.weights(Int[])
         end
     end
     nothing

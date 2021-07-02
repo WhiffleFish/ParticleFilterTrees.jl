@@ -6,7 +6,7 @@ function UCB(Q::Float64, Nh::Int, Nha::Int, c::Float64)::Float64
     return Nha > 0 ? Q + c*sqrt(log(Nh)/Nha) : Inf
 end
 
-function _unsafeUCB(Q::Float64, Nh::Int, Nha::Int, c::Float64)::Float64
+@inline function _unsafeUCB(Q::Float64, Nh::Int, Nha::Int, c::Float64)::Float64
     return Q + c*sqrt(log(Nh)/Nha)
 end
 

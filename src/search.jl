@@ -55,12 +55,13 @@ function obs_check_search(planner::PFTDPWPlanner, b_idx::Int, d::Int)::Float64
                 ow = tree.obs_weights[ba_idx]
                 w_loc = findfirst(x->x==bp_idx, tree.ba_children[ba_idx])
                 ow[w_loc] += 1
+                ow.sum += 1
                 r = tree.b_rewards[bp_idx]
             end
             total = r + discount(pomdp)*obs_check_search(planner, bp_idx, d-1)
         end
     else
-        w = StatsBase.weights(tree.obs_weights[ba_idx])
+        w = tree.obs_weights[ba_idx]
         bp_idx = tree.ba_children[ba_idx][StatsBase.sample(w)]
         r = tree.b_rewards[bp_idx::Int]
         total = r + discount(pomdp)*obs_check_search(planner, bp_idx, d-1)
