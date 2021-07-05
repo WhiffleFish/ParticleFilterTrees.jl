@@ -34,12 +34,17 @@ function POMDPs.solve(sol::PFTDPWSolver, pomdp::POMDP{S,A,O})::PFTDPWPlanner whe
     end
 
     if sol.resample
-        particle_cache = Vector{S}(undef, sol.n_particles)
-        weight_cache = StatsBase.weights(zeros(Float64,sol.n_particles))
+        cache = ReweightCache{S}(
+            particle_cache = Vector{S}(undef, sol.n_particles),
+            weight_cache = Vector{Float64}(undef, sol.n_particles),
+            ap = Vector{Float64}(undef, sol.n_particles),
+            alias = Vector{Int}(undef, sol.n_particles),
+            larges = Vector{Int}(undef, sol.n_particles),
+            smalls = Vector{Int}(undef, sol.n_particles)
+        )
         tree = PFTDPWTree{S,A,O,ResamplingPFTBelief{S}}(sol.tree_queries, sol.check_repeat_obs)
     else
-        particle_cache = S[]
-        weight_cache = StatsBase.weights(Float64[])
+        cache = ReweightCache{S}()
         tree = PFTDPWTree{S,A,O,RegPFTBelief{S}}(sol.tree_queries, sol.check_repeat_obs)
     end
 
@@ -50,8 +55,7 @@ function POMDPs.solve(sol::PFTDPWSolver, pomdp::POMDP{S,A,O})::PFTDPWPlanner whe
         RandomRollout(pomdp),
         a,
         SA,
-        particle_cache,
-        weight_cache
+        cache
     )
 end
 

@@ -72,7 +72,16 @@ RandomRollout(pomdp::POMDP) = RandomRollout(Xorshifts.Xoroshiro128Star(),actions
 
 POMDPs.action(p::RandomRollout,b) = rand(p.rng, p.actions)
 
-struct PFTDPWPlanner{M<:POMDP, SOL<:PFTDPWSolver, TREE<:PFTDPWTree, P<:Policy, A, B<:Vector} <: Policy
+@with_kw struct ReweightCache{S}
+    particle_cache::Vector{S} = S[]
+    weight_cache::Vector{Float64} = Float64[]
+    ap::Vector{Float64} = Float64[]
+    alias::Vector{Int} = Int[]
+    larges::Vector{Int} = Int[]
+    smalls::Vector{Int} = Int[]
+end
+
+struct PFTDPWPlanner{M<:POMDP, SOL<:PFTDPWSolver, TREE<:PFTDPWTree, P<:Policy, A, S} <: Policy
     pomdp::M
     sol::SOL
     tree::TREE
@@ -80,8 +89,7 @@ struct PFTDPWPlanner{M<:POMDP, SOL<:PFTDPWSolver, TREE<:PFTDPWTree, P<:Policy, A
 
     _placeholder_a::A
     _SA::Int # Size of action space (for sizehinting)
-    _particle_cache::B # for resampling PF updates
-    _weight_cache::StatsBase.Weights{Float64, Float64, Vector{Float64}} # for resampling PF updates
+    _RWCache::ReweightCache{S}
 end
 
 PFTDPWPlanner(pomdp::POMDP,sol::PFTDPWSolver,tree::PFTDPWTree) = PFTDPWPlanner(pomdp, sol, tree, RandomRollout(pomdp))

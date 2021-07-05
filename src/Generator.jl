@@ -94,8 +94,8 @@ function GenBelief(
     sample_r::Float64
     )::Tuple{PFTBelief{S}, Float64} where {S,A,O}
 
+    cache = planner._RWCache
     rng = planner.sol.rng
-    planner._weight_cache.sum = 0.0
     N = n_particles(b)
     weighted_return = 0.0
 
@@ -117,27 +117,87 @@ function GenBelief(
 
         # Reweighting
         @inbounds begin
-            planner._particle_cache[i] = sp
+            cache.particle_cache[i] = sp
             w_i = pdf(POMDPs.observation(pomdp, s, a, sp), o)
-            planner._weight_cache[i] = w_i
-            planner._weight_cache.sum += w_i
+            cache.weight_cache[i] = w_i
         end
 
         weighted_return += r*w
     end
 
-    resample!(rng, planner._particle_cache, planner._weight_cache, bp_particles)
+    rw_alias_sample!(rng, cache, bp_particles)
 
     bp = ResamplingPFTBelief(bp_particles, pomdp)
 
     return bp::ResamplingPFTBelief{S}, weighted_return::Float64
 end
 
-function incremental_avg(Qhat::Float64, Q::Float64, N::Int)
-    return Qhat + (Q - Qhat)/N
+function rw_make_alias_table!(w::AbstractVector{Float64}, wsum::Float64,
+                           a::AbstractVector{Float64},
+                           alias::AbstractVector{Int}, cache::ReweightCache)
+
+    n = length(w)
+    length(a) == length(alias) == n ||
+        throw(DimensionMismatch("Inconsistent array lengths."))
+
+    ac = n / wsum
+    for i = 1:n
+        @inbounds a[i] = w[i] * ac
+    end
+
+    larges = cache.larges
+    smalls = cache.smalls
+    kl = 0  # actual number of larges
+    ks = 0  # actual number of smalls
+
+    for i = 1:n
+        @inbounds ai = a[i]
+        if ai > 1.0
+            larges[kl+=1] = i  # push to larges
+        elseif ai < 1.0
+            smalls[ks+=1] = i  # push to smalls
+        end
+    end
+
+    while kl > 0 && ks > 0
+        s = smalls[ks]; ks -= 1  # pop from smalls
+        l = larges[kl]; kl -= 1  # pop from larges
+        @inbounds alias[s] = l
+        @inbounds al = a[l] = (a[l] - 1.0) + a[s]
+        if al > 1.0
+            larges[kl+=1] = l  # push to larges
+        else
+            smalls[ks+=1] = l  # push to smalls
+        end
+    end
+
+    # this loop should be redundant, except for rounding
+    for i = 1:ks
+        @inbounds a[smalls[i]] = 1.0
+    end
+    nothing
 end
 
-function resample!(rng::AbstractRNG, cache::Vector{S}, w::StatsBase.Weights{Float64,Float64,Vector{Float64}}, bp_particles::Vector{S}) where {S}
-    StatsBase.alias_sample!(rng, cache, w, bp_particles)
+function rw_alias_sample!(rng::AbstractRNG, cache::ReweightCache, x::AbstractArray)
+    a = cache.particle_cache
+    wv = cache.weight_cache
+    n = length(a)
+    length(wv) == n || throw(DimensionMismatch("Inconsistent lengths."))
+
+    # create alias table
+    ap = cache.ap
+    alias = cache.alias
+    rw_make_alias_table!(wv, sum(wv), ap, alias, cache)
+
+    # sampling
+    s = 1:n
+    for i = 1:length(x)
+        j = rand(rng, s)
+        x[i] = rand(rng) < ap[j] ? a[j] : a[alias[j]]
+    end
     nothing
+end
+
+function incremental_avg(Qhat::Float64, Q::Float64, N::Int)
+    return Qhat + (Q - Qhat)/N
 end
