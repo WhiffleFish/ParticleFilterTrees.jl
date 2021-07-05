@@ -29,24 +29,29 @@ function insert_belief!(tree::PFTDPWTree{S,A,O}, b::PFTBelief{S}, ba_idx::Int, o
     nothing
 end
 
-function initial_belief(pomdp, b, n_p::Int)
+function initial_belief(pomdp, b, n_p::Int, resample::Bool)
     s = Vector{statetype(pomdp)}(undef, n_p)
     w_i = inv(n_p)
     w = fill(w_i, n_p)
     term_ws = 0.0
+
 
     for i in 1:n_p
         s_i = rand(b)
         s[i] = s_i
         !isterminal(pomdp, s_i) && (term_ws += w_i)
     end
-
-    return PFTBelief(s, w, term_ws)
+    if resample
+        return ResamplingPFTBelief(s,term_ws)
+    else
+        return RegPFTBelief(s, w, term_ws)
+    end
 end
 
-function insert_root!(tree::PFTDPWTree{S,A,O}, pomdp, b, n_p::Int)::Nothing where {S,A,O}
+function insert_root!(tree::PFTDPWTree{S,A,O,B}, pomdp, b, n_p::Int)::Nothing where {S,A,O,B}
     n_b = length(tree.b)+1
-    particle_b = initial_belief(pomdp, b, n_p)
+
+    particle_b = initial_belief(pomdp, b, n_p, B <: ResamplingPFTBelief)
 
     push!(tree.b, particle_b)
     push!(tree.b_children, Tuple{A,Int}[])

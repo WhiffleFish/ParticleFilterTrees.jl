@@ -32,7 +32,27 @@ function POMDPs.solve(sol::PFTDPWSolver, pomdp::POMDP{S,A,O})::PFTDPWPlanner whe
     else
         SA = -1
     end
-    return PFTDPWPlanner(pomdp, sol, PFTDPWTree{S,A,O}(sol.tree_queries, sol.check_repeat_obs), RandomRollout(pomdp), a, SA)
+
+    if sol.resample
+        particle_cache = Vector{S}(undef, sol.n_particles)
+        weight_cache = StatsBase.weights(zeros(Float64,sol.n_particles))
+        tree = PFTDPWTree{S,A,O,ResamplingPFTBelief{S}}(sol.tree_queries, sol.check_repeat_obs)
+    else
+        particle_cache = S[]
+        weight_cache = StatsBase.weights(Float64[])
+        tree = PFTDPWTree{S,A,O,RegPFTBelief{S}}(sol.tree_queries, sol.check_repeat_obs)
+    end
+
+    return PFTDPWPlanner(
+        pomdp,
+        sol,
+        tree,
+        RandomRollout(pomdp),
+        a,
+        SA,
+        particle_cache,
+        weight_cache
+    )
 end
 
 function POMDPModelTools.action_info(planner::PFTDPWPlanner, b)

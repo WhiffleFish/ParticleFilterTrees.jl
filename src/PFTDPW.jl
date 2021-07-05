@@ -15,12 +15,12 @@ export PFTDPWTree, PFTDPWSolver, PFTDPWPlanner, RandomRollout
 
 include("belief.jl")
 
-@with_kw struct PFTDPWTree{S,A,O}
+@with_kw struct PFTDPWTree{S,A,O,B<:PFTBelief{S}}
     Nh::Vector{Int} = Int[]
     Nha::Vector{Int} = Int[] # Number of times a history-action node has been visited
     Qha::Vector{Float64} = Float64[] # Map ba node to associated Q value
 
-    b::Vector{PFTBelief{S}} = PFTBelief{S}[]
+    b::Vector{B} = B[]
     b_children::Vector{Vector{Tuple{A,Int}}} = Vector{Tuple{A,Int}}[] # b_idx => [(a,ba_idx), ...]
     b_rewards::Vector{Float64} = Float64[] # Map b' node index to immediate reward associated with trajectory bao where b' = τ(bao)
 
@@ -28,14 +28,14 @@ include("belief.jl")
     ba_children::Vector{Vector{Int}} = Vector{Int}[] # ba_idx => [bp_idx, bp_idx, bp_idx, ...]
     obs_weights::Dict{Int,StatsBase.Weights{Int, Int, Vector{Int}}} = Dict{Int,StatsBase.Weights{Int, Int, Vector{Int}}}()
 
-    function PFTDPWTree{S,A,O}(sz::Int, check_repeat_obs::Bool) where {S,A,O}
+    function PFTDPWTree{S,A,O,B}(sz::Int, check_repeat_obs::Bool) where {S,A,O,B<:PFTBelief{S}}
         sz = min(sz, 100_000)
         return new(
             sizehint!(Int[], sz),
             sizehint!(Int[], sz),
             sizehint!(Float64[], sz),
 
-            sizehint!(PFTBelief{S}[], sz),
+            sizehint!(B[], sz),
             sizehint!(Vector{Tuple{A,Int}}[], sz),
             sizehint!(Float64[], sz),
 
@@ -60,6 +60,7 @@ end
     updater::UPD           = NothingUpdater()
     check_repeat_obs::Bool = true
     enable_action_pw::Bool = false
+    resample::Bool         = false
 end
 
 struct RandomRollout{RNG<:AbstractRNG,  A} <: Policy
@@ -71,7 +72,7 @@ RandomRollout(pomdp::POMDP) = RandomRollout(Xorshifts.Xoroshiro128Star(),actions
 
 POMDPs.action(p::RandomRollout,b) = rand(p.rng, p.actions)
 
-struct PFTDPWPlanner{M<:POMDP, SOL<:PFTDPWSolver, TREE<:PFTDPWTree, P<:Policy, A} <: Policy
+struct PFTDPWPlanner{M<:POMDP, SOL<:PFTDPWSolver, TREE<:PFTDPWTree, P<:Policy, A, B<:Vector} <: Policy
     pomdp::M
     sol::SOL
     tree::TREE
@@ -79,6 +80,8 @@ struct PFTDPWPlanner{M<:POMDP, SOL<:PFTDPWSolver, TREE<:PFTDPWTree, P<:Policy, A
 
     _placeholder_a::A
     _SA::Int # Size of action space (for sizehinting)
+    _particle_cache::B # for resampling PF updates
+    _weight_cache::StatsBase.Weights{Float64, Float64, Vector{Float64}} # for resampling PF updates
 end
 
 PFTDPWPlanner(pomdp::POMDP,sol::PFTDPWSolver,tree::PFTDPWTree) = PFTDPWPlanner(pomdp, sol, tree, RandomRollout(pomdp))

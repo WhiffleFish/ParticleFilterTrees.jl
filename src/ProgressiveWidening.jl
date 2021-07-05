@@ -19,7 +19,8 @@ function UCB1action(planner::PFTDPWPlanner, tree::PFTDPWTree{S,A,O}, b_idx::Int,
         Nha = tree.Nha[ba_idx]
         Nha == 0 && return a::A, ba_idx::Int
 
-        @inbounds ucb = _unsafeUCB(tree.Qha[ba_idx], tree.Nh[b_idx], Nha, c)
+        # @inbounds ucb = _unsafeUCB(tree.Qha[ba_idx], tree.Nh[b_idx], Nha, c)
+        ucb = _unsafeUCB(tree.Qha[ba_idx], tree.Nh[b_idx], Nha, c)
         if ucb > max_ucb
             max_ucb = ucb
             opt_a = a

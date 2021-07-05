@@ -36,13 +36,17 @@ tag_sol = PFTDPWSolver(max_time=0.1, max_depth=40, enable_action_pw=true, check_
 tag_planner = solve(tag_sol, tag)
 
 
-@info "Test action_info"
-@inferred action_info(tiger_planner, initialstate(tiger))
+@info "Test Rollouts"
+sim = RolloutSimulator(max_steps=100)
 
-@inferred action_info(baby_planner, initialstate(baby))
+@show simulate(sim, tiger, tiger_planner, BootstrapFilter(tiger, 1_000))
 
-@inferred action_info(lt_planner, initialstate(lasertag))
+@show simulate(sim, baby, baby_planner, BootstrapFilter(baby, 1_000))
 
-@inferred action_info(subhunt_planner, initialstate(subhunt))
+@show simulate(sim, lasertag, lt_planner, BootstrapFilter(lasertag, 100_000))
 
-@inferred action_info(tag_planner, initialstate(tag))
+@show simulate(sim, subhunt, subhunt_planner, BootstrapFilter(subhunt, 100_000))
+
+@show simulate(sim, tag, tag_planner, BootstrapFilter(tag, 100_000))
+
+@info "Testing Complete"

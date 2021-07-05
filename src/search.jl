@@ -44,20 +44,20 @@ function obs_check_search(planner::PFTDPWPlanner, b_idx::Int, d::Int)::Float64
         sample_sp, o, sample_r = @gen(:sp,:o,:r)(pomdp, sample_s, a)
 
         if !haskey(tree.bao_children, (ba_idx, o))
-            bp, r = ObsCheckGenBelief(planner, pomdp, b, a, o, p_idx, sample_sp, sample_r)
+            bp, r = GenBelief(planner, pomdp, b, a, o, p_idx, sample_sp, sample_r)
             insert_belief!(tree, bp, ba_idx, o, r, planner)
             ro = rollout(planner, bp, d-1)
             total = r + discount(pomdp)*ro
 
         else
-            @inbounds begin
+            # @inbounds begin
                 bp_idx::Int = tree.bao_children[(ba_idx,o)]
                 ow = tree.obs_weights[ba_idx]
                 w_loc = findfirst(x->x==bp_idx, tree.ba_children[ba_idx])
                 ow[w_loc] += 1
                 ow.sum += 1
                 r = tree.b_rewards[bp_idx]
-            end
+            # end
             total = r + discount(pomdp)*obs_check_search(planner, bp_idx, d-1)
         end
     else
