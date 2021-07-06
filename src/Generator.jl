@@ -3,13 +3,13 @@ function GenBelief(
     pomdp::POMDP{S,A,O},
     b::B,
     a::A
-    )::Tuple{PFTBelief, O, Float64} where {S,A,O,B<:PFTBelief{S}}
+    ) where {S,A,O,B<:PFTBelief{S}}
 
-    p_idx = non_terminal_sample(rng, pomdp, b)
+    p_idx = non_terminal_sample(planner.sol.rng, pomdp, b)
 
     sample_s = particle(b, p_idx)
 
-    sample_sp, sample_obs, sample_r = @gen(:sp,:o,:r)(pomdp, sample_s, a, rng)
+    sample_sp, sample_obs, sample_r = @gen(:sp,:o,:r)(pomdp, sample_s, a, planner.sol.rng)
 
     return GenBelief(planner, pomdp, b, a, sample_obs, p_idx, sample_sp, sample_r)
 end
@@ -23,7 +23,7 @@ function GenBelief(
     p_idx::Int,
     sample_sp::S,
     sample_r::Float64
-    )::Tuple{PFTBelief{S}, Float64} where {S,A,O}
+    ) where {S,A,O}
 
     rng = planner.sol.rng
     N = n_particles(b)
@@ -68,19 +68,19 @@ function GenBelief(
     # Just return belief of all terminal states so it's never ever ever touched or looked at again
     if iszero(bp_terminal_ws)
         # Oh god I hate it
-        terminal_particle = sample_s
+        terminal_particle = sample_sp
         for s in bp_particles
             if isterminal(pomdp, s)
                 terminal_particle = s
                 break
             end
         end
-        return RegPFTBelief(fill(terminal_particle, N), fill(inv(N), N), 0.0)::PFTBelief{S}, sample_obs::O, 0.0
+        return RegPFTBelief(fill(terminal_particle, N), fill(inv(N), N), 0.0)::PFTBelief{S}, o::O, weighted_return::Float64
     end
 
     bp = RegPFTBelief(bp_particles, bp_weights, bp_terminal_ws)
 
-    return bp::RegPFTBelief{S}, weighted_return::Float64
+    return bp::RegPFTBelief{S}, o::O, weighted_return::Float64
 end
 
 function GenBelief(
@@ -92,7 +92,7 @@ function GenBelief(
     p_idx::Int,
     sample_sp::S,
     sample_r::Float64
-    )::Tuple{PFTBelief{S}, Float64} where {S,A,O}
+    ) where {S,A,O}
 
     cache = planner._RWCache
     rng = planner.sol.rng
@@ -129,7 +129,7 @@ function GenBelief(
 
     bp = ResamplingPFTBelief(bp_particles, pomdp)
 
-    return bp::ResamplingPFTBelief{S}, weighted_return::Float64
+    return bp::ResamplingPFTBelief{S}, o::O, weighted_return::Float64
 end
 
 function rw_make_alias_table!(w::AbstractVector{Float64}, wsum::Float64,
@@ -178,6 +178,7 @@ function rw_make_alias_table!(w::AbstractVector{Float64}, wsum::Float64,
     nothing
 end
 
+# https://github.com/JuliaStats/StatsBase.jl/blob/9f1d7aafa86f8771a995b54de1e2432c6e9f55a0/src/sampling.jl#L513-L525
 function rw_alias_sample!(rng::AbstractRNG, cache::ReweightCache, x::AbstractArray)
     a = cache.particle_cache
     wv = cache.weight_cache

@@ -12,9 +12,10 @@ solver = PFTDPWSolver(
     k_o=5,
     max_depth=30,
     c=100.0,
-    n_particles=10,
+    n_particles=100,
     check_repeat_obs=false,
-    enable_action_pw=false
+    enable_action_pw=false,
+    resample=false
 )
 planner = solve(solver, LightDark)
 
@@ -24,11 +25,15 @@ planner = solve(solver, LightDark)
 
 @benchmark action_info(planner, initialstate(LightDark))
 
+@benchmark action_info(planner, initialstate(LightDark))
+
 @profiler a_info = action_info(planner, initialstate(LightDark))
 
 a, info = action_info(planner, initialstate(LightDark))
 t = D3Tree(info[:tree])
 inchrome(t)
+tree = info[:tree]
+
 
 ##
 using POMCPOW
