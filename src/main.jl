@@ -43,7 +43,7 @@ function POMDPs.solve(sol::PFTDPWSolver, pomdp::POMDP{S,A,O})::PFTDPWPlanner whe
             Vector{Float64}[], # resampled particles all have equal weight
             sz,
             sol.n_particles,
-            Ref{Int}(0)
+            0
         )
         tree = PFTDPWTree{S,A,O,ResamplingPFTBelief{S}}(sol.tree_queries, sol.check_repeat_obs)
     else
@@ -54,7 +54,7 @@ function POMDPs.solve(sol::PFTDPWSolver, pomdp::POMDP{S,A,O})::PFTDPWPlanner whe
             [Vector{Float64}(undef, sol.n_particles) for _ in 1:sz],
             sz,
             sol.n_particles,
-            Ref{Int}(0)
+            0
         )
         tree = PFTDPWTree{S,A,O,RegPFTBelief{S}}(sol.tree_queries, sol.check_repeat_obs)
     end

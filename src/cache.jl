@@ -1,4 +1,4 @@
-struct Cache{S}
+mutable struct Cache{S}
     resample_particles::Vector{S}
     resample_weights::Vector{Float64}
 
@@ -7,12 +7,12 @@ struct Cache{S}
 
     capacity::Int
     n_particles::Int
-    n::Ref{Int}
+    n::Int
 end
 
-used(cache::Cache) = cache.n[]
-increment!(cache::Cache) = cache.n[] += 1
-free!(cache::Cache) = cache.n[] = 0
+used(cache::Cache) = cache.n
+increment!(cache::Cache) = (cache.n += 1)
+free!(cache::Cache) = (cache.n = 0)
 
 function get_cached_belief(cache::Cache{S}) where {S}
     n = used(cache)
