@@ -39,8 +39,7 @@ function non_terminal_sample(rng::AbstractRNG, pomdp::POMDP, b::ResamplingPFTBel
     while cw < t && i < N
         i += 1
         isterminal(pomdp,particle(b,i)) && continue
-        # @inbounds cw += w
-        cw += w
+        @inbounds cw += w
     end
     return i
 end

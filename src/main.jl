@@ -33,18 +33,29 @@ function POMDPs.solve(sol::PFTDPWSolver, pomdp::POMDP{S,A,O})::PFTDPWPlanner whe
         SA = -1
     end
 
+    sz = min(100_000, sol.tree_queries)
+
     if sol.resample
-        cache = ReweightCache{S}(
-            particle_cache = Vector{S}(undef, sol.n_particles),
-            weight_cache = Vector{Float64}(undef, sol.n_particles),
-            ap = Vector{Float64}(undef, sol.n_particles),
-            alias = Vector{Int}(undef, sol.n_particles),
-            larges = Vector{Int}(undef, sol.n_particles),
-            smalls = Vector{Int}(undef, sol.n_particles)
+        cache = Cache{S}(
+            Vector{S}(undef, sol.n_particles),
+            Vector{Float64}(undef, sol.n_particles),
+            [Vector{S}(undef, sol.n_particles) for _ in 1:sz],
+            Vector{Float64}[], # resampled particles all have equal weight
+            sz,
+            sol.n_particles,
+            Ref{Int}(0)
         )
         tree = PFTDPWTree{S,A,O,ResamplingPFTBelief{S}}(sol.tree_queries, sol.check_repeat_obs)
     else
-        cache = ReweightCache{S}()
+        cache = Cache{S}(
+            S[],
+            Float64[],
+            [Vector{S}(undef, sol.n_particles) for _ in 1:sz],
+            [Vector{Float64}(undef, sol.n_particles) for _ in 1:sz],
+            sz,
+            sol.n_particles,
+            Ref{Int}(0)
+        )
         tree = PFTDPWTree{S,A,O,RegPFTBelief{S}}(sol.tree_queries, sol.check_repeat_obs)
     end
 
@@ -71,7 +82,7 @@ function POMDPModelTools.action_info(planner::PFTDPWPlanner, b)
     A = actiontype(pomdp)
 
     empty!(planner.tree)
-    insert_root!(planner.tree, pomdp, b, sol.n_particles)
+    insert_root!(planner, b, sol.n_particles)
 
     iter = 0
     if planner.sol.check_repeat_obs
@@ -101,7 +112,7 @@ function POMDPs.action(planner::PFTDPWPlanner, b)
 end
 
 function isterminalbelief(pomdp::POMDP, b::PFTBelief)
-    all(isterminal(pomdp, s) for s in particles(b))
+    !any(!isterminal(pomdp,s)*w>0 for (s,w) in weighted_particles(b))
 end
 
 function Base.empty!(tree::PFTDPWTree)

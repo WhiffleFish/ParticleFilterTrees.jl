@@ -28,6 +28,8 @@ include("belief.jl")
     ba_children::Vector{Vector{Int}} = Vector{Int}[] # ba_idx => [bp_idx, bp_idx, bp_idx, ...]
     obs_weights::Dict{Int,StatsBase.Weights{Int, Int, Vector{Int}}} = Dict{Int,StatsBase.Weights{Int, Int, Vector{Int}}}()
 
+    terminal::BitVector = BitVector()
+
     function PFTDPWTree{S,A,O,B}(sz::Int, check_repeat_obs::Bool) where {S,A,O,B<:PFTBelief{S}}
         sz = min(sz, 100_000)
         return new(
@@ -41,7 +43,9 @@ include("belief.jl")
 
             sizehint!(Dict{Tuple{Int,O},Int}(), check_repeat_obs ? sz : 0),
             sizehint!(Vector{Int}[], sz),
-            sizehint!(Dict{Int,StatsBase.Weights{Int, Int, Vector{Int}}}(), check_repeat_obs ? sz : 0)
+            sizehint!(Dict{Int,StatsBase.Weights{Int, Int, Vector{Int}}}(), check_repeat_obs ? sz : 0),
+
+            sizehint!(BitVector(), sz)
             )
     end
 end
@@ -72,14 +76,7 @@ RandomRollout(pomdp::POMDP) = RandomRollout(Xorshifts.Xoroshiro128Star(),actions
 
 POMDPs.action(p::RandomRollout,b) = rand(p.rng, p.actions)
 
-@with_kw struct ReweightCache{S}
-    particle_cache::Vector{S} = S[]
-    weight_cache::Vector{Float64} = Float64[]
-    ap::Vector{Float64} = Float64[]
-    alias::Vector{Int} = Int[]
-    larges::Vector{Int} = Int[]
-    smalls::Vector{Int} = Int[]
-end
+include("cache.jl")
 
 struct PFTDPWPlanner{M<:POMDP, SOL<:PFTDPWSolver, TREE<:PFTDPWTree, P<:Policy, A, S} <: Policy
     pomdp::M
@@ -89,7 +86,7 @@ struct PFTDPWPlanner{M<:POMDP, SOL<:PFTDPWSolver, TREE<:PFTDPWTree, P<:Policy, A
 
     _placeholder_a::A
     _SA::Int # Size of action space (for sizehinting)
-    _RWCache::ReweightCache{S}
+    cache::Cache{S}
 end
 
 PFTDPWPlanner(pomdp::POMDP,sol::PFTDPWSolver,tree::PFTDPWTree) = PFTDPWPlanner(pomdp, sol, tree, RandomRollout(pomdp))

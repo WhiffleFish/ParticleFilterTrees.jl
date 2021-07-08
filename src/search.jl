@@ -3,7 +3,7 @@ function no_obs_check_search(planner::PFTDPWPlanner, b_idx::Int, d::Int)::Float6
     pomdp = planner.pomdp
     sol = planner.sol
 
-    if iszero(d) || isterminalbelief(pomdp, tree.b[b_idx])
+    if iszero(d) || tree.terminal[b_idx]
         return 0.0
     end
 
@@ -31,7 +31,7 @@ function obs_check_search(planner::PFTDPWPlanner, b_idx::Int, d::Int)::Float64
     pomdp = planner.pomdp
     sol = planner.sol
 
-    if iszero(d) || isterminalbelief(pomdp, tree.b[b_idx])
+    if iszero(d) || tree.terminal[b_idx]
         return 0.0
     end
 
@@ -50,14 +50,13 @@ function obs_check_search(planner::PFTDPWPlanner, b_idx::Int, d::Int)::Float64
             total = r + discount(pomdp)*ro
 
         else
-            # @inbounds begin
+            @inbounds begin
                 bp_idx::Int = tree.bao_children[(ba_idx,o)]
                 ow = tree.obs_weights[ba_idx]
                 w_loc = findfirst(x->x==bp_idx, tree.ba_children[ba_idx])
                 ow[w_loc] += 1
-                ow.sum += 1
                 r = tree.b_rewards[bp_idx]
-            # end
+            end
             total = r + discount(pomdp)*obs_check_search(planner, bp_idx, d-1)
         end
     else

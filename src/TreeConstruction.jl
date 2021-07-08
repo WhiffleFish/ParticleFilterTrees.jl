@@ -14,6 +14,7 @@ function insert_belief!(tree::PFTDPWTree{S,A,O}, b::PFTBelief{S}, ba_idx::Int, o
     push!(tree.Nh, 0)
     push!(tree.b_rewards, r)
     push!(tree.ba_children[ba_idx],n_b)
+    push!(tree.terminal, isterminalbelief(planner.pomdp,b))
 
     if planner.sol.enable_action_pw
         push!(tree.b_children, Tuple{A,Int}[])
@@ -29,34 +30,41 @@ function insert_belief!(tree::PFTDPWTree{S,A,O}, b::PFTBelief{S}, ba_idx::Int, o
     nothing
 end
 
-function initial_belief(pomdp, b, n_p::Int, resample::Bool)
-    s = Vector{statetype(pomdp)}(undef, n_p)
-    w_i = inv(n_p)
-    w = fill(w_i, n_p)
+function initial_belief(planner, b, n_p::Int, resample::Bool)
     term_ws = 0.0
+    w_i = inv(n_p)
 
-
-    for i in 1:n_p
-        s_i = rand(b)
-        s[i] = s_i
-        !isterminal(pomdp, s_i) && (term_ws += w_i)
-    end
     if resample
-        return ResamplingPFTBelief(s,term_ws)
+        s = get_cached_particles(planner.cache)
+        for i in 1:n_p
+            s_i = rand(b)
+            s[i] = s_i
+            !isterminal(planner.pomdp, s_i) && (term_ws += w_i)
+        end
+        return ResamplingPFTBelief(s, term_ws)
+
     else
+        s,w = get_cached_belief(planner.cache)
+        w = fill!(w, w_i)
+        for i in 1:n_p
+            s_i = rand(b)
+            s[i] = s_i
+            !isterminal(planner.pomdp, s_i) && (term_ws += w_i)
+        end
         return RegPFTBelief(s, w, term_ws)
     end
 end
 
-function insert_root!(tree::PFTDPWTree{S,A,O,B}, pomdp, b, n_p::Int)::Nothing where {S,A,O,B}
-    n_b = length(tree.b)+1
+function insert_root!(planner::PFTDPWPlanner, b, n_p::Int)
 
-    particle_b = initial_belief(pomdp, b, n_p, B <: ResamplingPFTBelief)
+    particle_b = initial_belief(planner, b, n_p, planner.sol.resample)
 
-    push!(tree.b, particle_b)
-    push!(tree.b_children, Tuple{A,Int}[])
-    push!(tree.Nh, 0)
-    push!(tree.b_rewards, 0.0)
+    A = actiontype(planner.pomdp)
+    push!(planner.tree.b, particle_b)
+    push!(planner.tree.b_children, Tuple{A,Int}[])
+    push!(planner.tree.Nh, 0)
+    push!(planner.tree.b_rewards, 0.0)
+    push!(planner.tree.terminal, isterminalbelief(planner.pomdp,particle_b))
     nothing
 end
 
