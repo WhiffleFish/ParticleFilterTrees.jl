@@ -20,7 +20,7 @@ const LightDark = QuickPOMDP(
 
     reward = function (s, a, sp, o)
         if a == 0
-            return s == 0 ? 100 : -100
+            return s == 0 ? 100.0 : -100.0
         else
             return -1.0
         end
