@@ -13,6 +13,8 @@ using RandomNumbers: Xorshifts
 
 export PFTDPWTree, PFTDPWSolver, PFTDPWPlanner, RandomRollout
 
+export PFTBelief
+
 include("belief.jl")
 
 @with_kw struct PFTDPWTree{S,A,O}

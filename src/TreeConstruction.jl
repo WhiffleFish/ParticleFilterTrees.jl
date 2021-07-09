@@ -45,7 +45,6 @@ function initial_belief(pomdp, b, n_p::Int)
 end
 
 function insert_root!(tree::PFTDPWTree{S,A,O}, pomdp, b, n_p::Int)::Nothing where {S,A,O}
-    n_b = length(tree.b)+1
     particle_b = initial_belief(pomdp, b, n_p)
 
     push!(tree.b, particle_b)

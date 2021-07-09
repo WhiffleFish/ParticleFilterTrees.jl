@@ -12,10 +12,8 @@ function GenBelief(
     p_idx = non_terminal_sample(rng, pomdp, b)
 
     sample_s = particle(b, p_idx)
-
     sample_sp, sample_obs, sample_r = @gen(:sp,:o,:r)(pomdp, sample_s, a, rng)
 
-    # bp = PFTBelief(Vector{S}(undef, N), Vector{Float64}(undef, N), BitVector(undef, N))
     bp_particles = Vector{S}(undef, N)
     bp_weights = Vector{Float64}(undef, N)
     bp_terminal_ws = 0.0
@@ -48,10 +46,8 @@ function GenBelief(
         fill!(bp_weights, inv(N))
     end
 
-    for (s,w) in zip(bp_particles, bp_weights)
-        !isterminal(pomdp, s) && (bp_terminal_ws += w)
-    end
-    bp = PFTBelief(bp_particles, bp_weights, bp_terminal_ws)
+    bp = PFTBelief(bp_particles, bp_weights, pomdp)
+
     return bp::PFTBelief{S}, sample_obs::O, weighted_return::Float64
 end
 
@@ -103,11 +99,7 @@ function ObsCheckGenBelief(
         fill!(bp_weights, inv(N))
     end
 
-    for (s,w) in zip(bp_particles, bp_weights)
-        !isterminal(pomdp, s) && (bp_terminal_ws += w)
-    end
-
-    bp = PFTBelief(bp_particles, bp_weights, bp_terminal_ws)
+    bp = PFTBelief(bp_particles, bp_weights, pomdp)
 
     return bp::PFTBelief{S}, weighted_return::Float64
 end

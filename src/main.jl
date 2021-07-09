@@ -77,7 +77,7 @@ function POMDPs.action(planner::PFTDPWPlanner, b)
 end
 
 function isterminalbelief(pomdp::POMDP, b::PFTBelief)
-    all(isterminal(pomdp, s) for s in particles(b))
+    !any(!isterminal(pomdp,s)*w>0 for (s,w) in weighted_particles(b))
 end
 
 function Base.empty!(tree::PFTDPWTree)
