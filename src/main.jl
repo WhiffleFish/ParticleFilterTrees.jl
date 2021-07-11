@@ -82,6 +82,7 @@ function POMDPModelTools.action_info(planner::PFTDPWPlanner, b)
     A = actiontype(pomdp)
 
     empty!(planner.tree)
+    free!(planner.cache)
     insert_root!(planner, b, sol.n_particles)
 
     iter = 0
