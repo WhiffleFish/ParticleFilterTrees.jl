@@ -1,7 +1,11 @@
 [deps]
+ArgParse = "c7e460c6-2fb9-53a9-8c5b-16f535851c63"
 BeliefUpdaters = "8bb6e9a1-7d73-552c-a44a-e5dc5634aac4"
 BenchmarkTools = "6e4b80f9-dd63-53aa-95a3-0cdb28fa8baf"
+CSV = "336ed68f-0bac-5ca0-87d4-7b16caf5d00b"
 D3Trees = "e3df1716-f71e-5df9-9e2d-98e193103c45"
+DataFrames = "a93c6f00-e57d-5684-b7b6-d8193f3e46c0"
+Dates = "ade2ca70-3891-5945-98fb-dc099432e06a"
 Distributed = "8ba89e20-285c-5b6f-9357-94700520ee1b"
 Distributions = "31c24e10-a181-5473-b8eb-7969acd0382f"
 LaserTag = "041f53e1-e4f8-54ec-814d-e9e995aa38d4"

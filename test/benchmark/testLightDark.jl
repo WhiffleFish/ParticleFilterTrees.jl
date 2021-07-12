@@ -5,7 +5,7 @@ using POMDPModelTools
 using POMDPs
 using PFTDPW
 using D3Trees
-include(join([@__DIR__,"/LightDarkPOMDP.jl"]))
+include(joinpath(@__DIR__,"../LightDarkPOMDP.jl"))
 
 solver = PFTDPWSolver(
     tree_queries=10_000,
