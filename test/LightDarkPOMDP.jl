@@ -1,3 +1,7 @@
+using QuickPOMDPs
+using Distributions
+using POMDPModelTools
+
 const R = 60
 const LIGHT_LOC = 10
 

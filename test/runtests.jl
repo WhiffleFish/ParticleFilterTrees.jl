@@ -38,7 +38,7 @@ tag_sol = PFTDPWSolver(max_time=0.1, max_depth=40, enable_action_pw=true, check_
 tag_planner = solve(tag_sol, tag)
 
 
-@info "Test Rollouts..."
+@info "Testing Rollouts..."
 ro = RolloutSimulator(max_steps=100)
 
 @show simulate(ro, tiger, tiger_planner, BootstrapFilter(tiger, 1_000))
@@ -87,5 +87,9 @@ PFTDPW.no_obs_check_search(subhunt_planner, 1, 10)
 
 ## Nonterminal sample test
 include("testSampling.jl")
+
+
+## Performance Testing
+include("testPerformance.jl")
 
 @info "Testing Complete"

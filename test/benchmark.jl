@@ -33,7 +33,7 @@ function benchmark(pomdp::POMDP, upd::Updater, planner::Policy, N::Int, max_step
         simulator=RolloutSimulator(max_steps=max_steps, rng=MersenneTwister(rand(UInt32)))
     ) for _ in 1:N]
 
-    res = run_parallel(sims, show_progress=true)
+    res = run_parallel(sims, show_progress=true, proc_warn=false)
 
     return res.reward
 end
