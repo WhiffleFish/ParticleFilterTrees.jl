@@ -32,7 +32,18 @@ function POMDPs.solve(sol::PFTDPWSolver, pomdp::POMDP{S,A,O})::PFTDPWPlanner whe
     else
         SA = -1
     end
-    return PFTDPWPlanner(pomdp, sol, PFTDPWTree{S,A,O}(sol.tree_queries, sol.check_repeat_obs), RandomRollout(pomdp), a, SA)
+
+    cache = BeliefCache{S}(sol)
+
+    return PFTDPWPlanner(
+        pomdp,
+        sol,
+        PFTDPWTree{S,A,O}(sol.tree_queries, sol.check_repeat_obs),
+        RandomRollout(pomdp),
+        a,
+        SA,
+        cache
+    )
 end
 
 function POMDPModelTools.action_info(planner::PFTDPWPlanner, b)
@@ -47,6 +58,7 @@ function POMDPModelTools.action_info(planner::PFTDPWPlanner, b)
     A = actiontype(pomdp)
 
     empty!(planner.tree)
+    free!(planner.cache)
     insert_root!(planner.tree, pomdp, b, sol.n_particles)
 
     iter = 0
