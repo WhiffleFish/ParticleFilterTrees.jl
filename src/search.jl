@@ -3,7 +3,7 @@ function no_obs_check_search(planner::PFTDPWPlanner, b_idx::Int, d::Int)::Float6
     pomdp = planner.pomdp
     sol = planner.sol
 
-    if iszero(d) || isterminalbelief(pomdp, tree.b[b_idx])
+    if iszero(d) || isterminalbelief(pomdp, tree.b[b_idx]) || tree.b[b_idx].non_terminal_ws < 1e-300
         return 0.0
     end
 
@@ -31,7 +31,7 @@ function obs_check_search(planner::PFTDPWPlanner, b_idx::Int, d::Int)::Float64
     pomdp = planner.pomdp
     sol = planner.sol
 
-    if iszero(d) || isterminalbelief(pomdp, tree.b[b_idx])
+    if iszero(d) || isterminalbelief(pomdp, tree.b[b_idx]) || tree.b[b_idx].non_terminal_ws < 1e-300
         return 0.0
     end
 
