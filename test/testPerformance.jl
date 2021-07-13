@@ -43,6 +43,10 @@ end
     using ParticleFilters
     using POMDPSimulators
     using POMDPModels
+
+    using QuickPOMDPs
+    using Distributions
+    using POMDPModelTools
     # include(joinpath(@__DIR__,"LightDarkPOMDP.jl")) # LightDark defined in runtests.jl
     using LaserTag
     using SubHunt
@@ -139,7 +143,7 @@ lasertag_solver = PFTDPWSolver(
     enable_action_pw = false
 )
 lasertag_planner = solve(lasertag_solver, lasertag)
-lasertag_updater = BootstrapFilter(lasertag, 100_000)
+lasertag_updater = BootstrapFilter(lasertag, 500_000)
 lasertag_r = benchmark(lasertag, lasertag_updater, lasertag_planner, N_SIMS, 100)
 push!(SIMS, "LaserTag")
 lasertag_m = mean(lasertag_r)
