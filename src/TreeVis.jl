@@ -25,7 +25,12 @@ function D3Trees.D3Tree(tree::PFTDPWTree{S,A,O}; show_obs::Bool=true) where {S,A
         end
     end
 
+    GREY_COLOR = hex(colorant"grey")
+    hex_colors = Vector{String}(undef, n_b+n_ba)
+
     for b_idx in 1:n_b
+        hex_colors[b_idx] = GREY_COLOR
+
         r = round(tree.b_rewards[b_idx], sigdigits=3)
         N = tree.Nh[b_idx]
 
@@ -66,12 +71,16 @@ function D3Trees.D3Tree(tree::PFTDPWTree{S,A,O}; show_obs::Bool=true) where {S,A
         end
     end
 
+    minQ, maxQ = extrema(tree.Qha)
 
     for ba_idx in 1:n_ba
         Q = round(tree.Qha[ba_idx], sigdigits=3)
         a = a_dict[ba_idx]
         N = tree.Nha[ba_idx]
 
+        relQ = (tree.Qha[ba_idx]-minQ)/(maxQ-minQ)
+        ba_color = weighted_color_mean(relQ, colorant"green", colorant"red");
+        hex_colors[n_b+ba_idx] = hex(ba_color);
         text[ba_idx + n_b] = """
             N = $N
             a = $a
@@ -84,9 +93,12 @@ function D3Trees.D3Tree(tree::PFTDPWTree{S,A,O}; show_obs::Bool=true) where {S,A
         link_style[ba_idx + n_b] = "stroke-width:$(stroke_width)px"
     end
 
+    style = fill("stroke:#",n_b+n_ba) .* hex_colors
+
     return D3Trees.D3Tree(
         children,
         text = text,
+        style = style,
         tooltip = tooltip,
         link_style = link_style,
         title = "PFT-DPW Tree"

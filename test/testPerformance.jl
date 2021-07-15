@@ -205,7 +205,7 @@ println("StdErr: $(round(vdptag_stderr, sigdigits=4))")
 PROCS > 1 && Distributed.rmprocs(worker_ids)
 
 df = DataFrame(prob=SIMS, mean=MEAN_REWARDS, std_err=STD_ERR)
-date_str = Dates.format(now(), "__dd_mm_yy")
+date_str = Dates.format(now(), "_yyyy-mm-dd")
 filename = "results"*date_str*".csv"
 filepath = joinpath(@__DIR__, "perf", filename)
 CSV.write(filepath,df)

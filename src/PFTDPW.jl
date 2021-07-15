@@ -5,11 +5,12 @@ using POMDPs
 using Parameters # @with_kw
 using Random # Random.GLOBAL_RNG
 using BeliefUpdaters # NothingUpdater
-using D3Trees
-using POMDPModelTools
-import StatsBase
-using LinearAlgebra
-using RandomNumbers: Xorshifts
+using D3Trees # TreeVis
+using POMDPModelTools # action_info
+import StatsBase # weights, sample
+using LinearAlgebra # normalize!
+using RandomNumbers: Xorshifts # Fast RNG
+using Colors # TreeVis
 
 export PFTDPWTree, PFTDPWSolver, PFTDPWPlanner, RandomRollout
 
@@ -17,18 +18,18 @@ export PFTBelief
 
 include("belief.jl")
 
-@with_kw struct PFTDPWTree{S,A,O}
-    Nh::Vector{Int} = Int[]
-    Nha::Vector{Int} = Int[] # Number of times a history-action node has been visited
-    Qha::Vector{Float64} = Float64[] # Map ba node to associated Q value
+struct PFTDPWTree{S,A,O}
+    Nh::Vector{Int}
+    Nha::Vector{Int}# Number of times a history-action node has been visited
+    Qha::Vector{Float64} # Map ba node to associated Q value
 
-    b::Vector{PFTBelief{S}} = PFTBelief{S}[]
-    b_children::Vector{Vector{Tuple{A,Int}}} = Vector{Tuple{A,Int}}[] # b_idx => [(a,ba_idx), ...]
-    b_rewards::Vector{Float64} = Float64[] # Map b' node index to immediate reward associated with trajectory bao where b' = τ(bao)
+    b::Vector{PFTBelief{S}}
+    b_children::Vector{Vector{Tuple{A,Int}}}# b_idx => [(a,ba_idx), ...]
+    b_rewards::Vector{Float64}# Map b' node index to immediate reward associated with trajectory bao where b' = τ(bao)
 
-    bao_children::Dict{Tuple{Int,O},Int} = Dict{Tuple{Int,O},Int}() # (ba_idx,O) => bp_idx
-    ba_children::Vector{Vector{Int}} = Vector{Int}[] # ba_idx => [bp_idx, bp_idx, bp_idx, ...]
-    obs_weights::Dict{Int,StatsBase.Weights{Int, Int, Vector{Int}}} = Dict{Int,StatsBase.Weights{Int, Int, Vector{Int}}}()
+    bao_children::Dict{Tuple{Int,O},Int} # (ba_idx,O) => bp_idx
+    ba_children::Vector{Vector{Int}} # ba_idx => [bp_idx, bp_idx, bp_idx, ...]
+    obs_weights::Dict{Int,StatsBase.Weights{Int, Int, Vector{Int}}}
 
     function PFTDPWTree{S,A,O}(sz::Int, check_repeat_obs::Bool) where {S,A,O}
         sz = min(sz, 100_000)

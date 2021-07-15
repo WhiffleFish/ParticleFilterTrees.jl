@@ -41,8 +41,7 @@ function GenBelief(
     N = n_particles(b)
     weighted_return = 0.0
 
-    bp_particles, bp_weights = gen_empty_belief(planner, N, S)
-    bp_terminal_ws = 0.0
+    bp_particles, bp_weights = gen_empty_belief(planner.cache, N)
 
     for (i,(s,w)) in enumerate(weighted_particles(b))
         # Propagation
@@ -66,25 +65,11 @@ function GenBelief(
         weighted_return += r*w
     end
 
-    if !iszero(sum(bp_weights))
-        normalize!(bp_weights, 1)
-    else
-        fill!(bp_weights, inv(N))
-    end
+    normalize!(bp_weights, 1)
 
     bp = PFTBelief(bp_particles, bp_weights, pomdp)
 
     return bp::PFTBelief{S}, o::O, weighted_return::Float64
-end
-
-function gen_empty_belief(planner::PFTDPWPlanner, N::Int, ::Type{S}) where {S}
-    cache = planner.cache
-    cache.count += 1
-    if cache.count <= cache.max_size
-        return cache.particles[cache.count]::Vector{S}, cache.weights[cache.count]::Vector{Float64}
-    else
-        return Vector{S}(undef, N), Vector{Float64}(undef, N)
-    end
 end
 
 function incremental_avg(Qhat::Float64, Q::Float64, N::Int)
