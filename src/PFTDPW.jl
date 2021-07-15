@@ -5,11 +5,12 @@ using POMDPs
 using Parameters # @with_kw
 using Random # Random.GLOBAL_RNG
 using BeliefUpdaters # NothingUpdater
-using D3Trees
-using POMDPModelTools
-import StatsBase
-using LinearAlgebra
-using RandomNumbers: Xorshifts
+using D3Trees # TreeVis
+using POMDPModelTools # action_info
+import StatsBase # weights, sample
+using LinearAlgebra # normalize!
+using RandomNumbers: Xorshifts # Fast RNG
+using Colors # TreeVis
 
 export PFTDPWTree, PFTDPWSolver, PFTDPWPlanner, RandomRollout
 
