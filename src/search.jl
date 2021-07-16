@@ -11,7 +11,7 @@ function no_obs_check_search(planner::PFTDPWPlanner, b_idx::Int, d::Int)::Float6
     if length(tree.ba_children[ba_idx]) <= sol.k_o*tree.Nha[ba_idx]^sol.alpha_o
         bp, o, r = GenBelief(planner, pomdp, tree.b[b_idx], a)
         insert_belief!(tree, bp, ba_idx, o, r, planner)
-        ro = rollout(planner, bp, d-1)
+        ro = estimate_value(planner.solved_VE, pomdp, bp, d-1)
         total = r + discount(pomdp)*ro
     else
         bp_idx = rand(tree.ba_children[ba_idx])
@@ -46,7 +46,7 @@ function obs_check_search(planner::PFTDPWPlanner, b_idx::Int, d::Int)::Float64
         if !haskey(tree.bao_children, (ba_idx, o))
             bp, _, r = GenBelief(planner, pomdp, b, a, o, p_idx, sample_sp, sample_r)
             insert_belief!(tree, bp, ba_idx, o, r, planner)
-            ro = rollout(planner, bp, d-1)
+            ro = estimate_value(planner.solved_VE, pomdp, bp, d-1)
             total = r + discount(pomdp)*ro
 
         else

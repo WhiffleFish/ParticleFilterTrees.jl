@@ -22,7 +22,7 @@ const LightDark = QuickPOMDP(
 
     observation = (s, a, sp) -> Normal(sp, abs(sp - LIGHT_LOC::Int) + 1e-3),
 
-    reward = function (s, a, sp, o)
+    reward = function (s, a)
         if a == 0
             return s == 0 ? 100.0 : -100.0
         else

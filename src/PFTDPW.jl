@@ -12,11 +12,15 @@ using LinearAlgebra # normalize!
 using RandomNumbers: Xorshifts # Fast RNG
 using Colors # TreeVis
 
-export PFTDPWTree, PFTDPWSolver, PFTDPWPlanner, RandomRollout
+export PFTDPWTree, PFTDPWSolver, PFTDPWPlanner
 
 export PFTBelief
 
 include("belief.jl")
+
+export FastRandomSolver, FastRandomRolloutEstimator
+
+include("ValueEstimation.jl")
 
 struct PFTDPWTree{S,A,O}
     Nh::Vector{Int}
@@ -49,7 +53,7 @@ struct PFTDPWTree{S,A,O}
     end
 end
 
-@with_kw struct PFTDPWSolver{RNG<:AbstractRNG, UPD <:Updater} <: Solver
+@with_kw struct PFTDPWSolver{RNG<:AbstractRNG, VE} <: Solver
     max_depth::Int         = 20
     n_particles::Int       = 100
     c::Float64             = 1.0
@@ -60,34 +64,23 @@ end
     tree_queries::Int      = 1_000
     max_time::Float64      = Inf # (seconds)
     rng::RNG               = Xorshifts.Xoroshiro128Star()
-    updater::UPD           = NothingUpdater()
+    value_estimator::VE    = FastRandomSolver()
     check_repeat_obs::Bool = true
     enable_action_pw::Bool = false
 end
 
-struct RandomRollout{RNG<:AbstractRNG,  A} <: Policy
-    rng::RNG
-    actions::A
-end
-
-RandomRollout(pomdp::POMDP) = RandomRollout(Xorshifts.Xoroshiro128Star(),actions(pomdp))
-
-POMDPs.action(p::RandomRollout,b) = rand(p.rng, p.actions)
-
 include("cache.jl")
 
-struct PFTDPWPlanner{M<:POMDP, SOL<:PFTDPWSolver, TREE<:PFTDPWTree, P<:Policy, A, S} <: Policy
+struct PFTDPWPlanner{M<:POMDP, SOL<:PFTDPWSolver, TREE<:PFTDPWTree, VE, A, S} <: Policy
     pomdp::M
     sol::SOL
     tree::TREE
-    rollout_policy::P
+    solved_VE::VE
 
     _placeholder_a::A
     _SA::Int # Size of action space (for sizehinting)
     cache::BeliefCache{S}
 end
-
-PFTDPWPlanner(pomdp::POMDP,sol::PFTDPWSolver,tree::PFTDPWTree) = PFTDPWPlanner(pomdp, sol, tree, RandomRollout(pomdp))
 
 include("ProgressiveWidening.jl")
 include("Generator.jl")

@@ -65,7 +65,11 @@ function GenBelief(
         weighted_return += r*w
     end
 
-    normalize!(bp_weights, 1)
+    if !all(iszero, bp_weights)
+        normalize!(bp_weights, 1)
+    else
+        fill!(bp_weights, inv(N))
+    end
 
     bp = PFTBelief(bp_particles, bp_weights, pomdp)
 

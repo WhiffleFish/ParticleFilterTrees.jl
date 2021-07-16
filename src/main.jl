@@ -1,26 +1,8 @@
-"""
-Return weighted average rollout
-"""
-function rollout(planner::PFTDPWPlanner, b::PFTBelief, d::Int)::Float64
-    r = 0.0
-    sim = RolloutSimulator(rng = planner.sol.rng, max_steps = d)
-    for (s,w) in weighted_particles(b)
-        r_s = simulate(
-                sim,
-                planner.pomdp,
-                planner.rollout_policy,
-                planner.sol.updater,
-                b,
-                s
-            )::Float64
-        r += w*r_s # weight sum assumed to be 1.0
-    end
-    return r::Float64
-end
-
 function POMDPs.solve(sol::PFTDPWSolver, pomdp::POMDP{S,A,O})::PFTDPWPlanner where {S,A,O}
     act = actions(pomdp)
     a = rand(act)
+
+    solved_ve = convert_estimator(sol.value_estimator, sol, pomdp)
 
     if !sol.enable_action_pw
         try
@@ -39,7 +21,7 @@ function POMDPs.solve(sol::PFTDPWSolver, pomdp::POMDP{S,A,O})::PFTDPWPlanner whe
         pomdp,
         sol,
         PFTDPWTree{S,A,O}(sol.tree_queries, sol.check_repeat_obs),
-        RandomRollout(pomdp),
+        solved_ve,
         a,
         SA,
         cache
