@@ -99,6 +99,11 @@ function estimate_value(est, pomdp::POMDP, b::PFTBelief, d::Int)
     return v
 end
 
+function convert_estimator(est::BasicPOMCP.FOValue, sol, pomdp::POMDP)
+    policy = MCTS.convert_to_policy(est.solver, UnderlyingMDP(pomdp))
+    BasicPOMCP.SolvedFOValue(policy)
+end
+
 function estimate_value(est::BasicPOMCP.SolvedFOValue, pomdp::POMDP{S}, s::S, d::Int) where S
     POMDPs.value(est.policy, s)
 end
