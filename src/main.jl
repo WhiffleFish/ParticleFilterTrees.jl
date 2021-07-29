@@ -2,7 +2,7 @@ function POMDPs.solve(sol::PFTDPWSolver, pomdp::POMDP{S,A,O})::PFTDPWPlanner whe
     act = actions(pomdp)
     a = rand(act)
 
-    solved_ve = convert_estimator(sol.value_estimator, sol, pomdp)
+    solved_ve = BasicPOMCP.convert_estimator(sol.value_estimator, sol, pomdp)
 
     if !sol.enable_action_pw
         try
@@ -41,7 +41,7 @@ function POMDPModelTools.action_info(planner::PFTDPWPlanner, b)
 
     empty!(planner.tree)
     free!(planner.cache)
-    insert_root!(planner.tree, pomdp, b, sol.n_particles)
+    insert_root!(planner.sol.rng, planner.tree, pomdp, b, sol.n_particles)
 
     iter = 0
     if planner.sol.check_repeat_obs
@@ -59,10 +59,10 @@ function POMDPModelTools.action_info(planner::PFTDPWPlanner, b)
     a, a_idx = UCB1action(planner, planner.tree, 1, 0.0)
     if a_idx == 0; a = rand(actions(pomdp)); end
 
-    return a::A, Dict{Symbol, Any}(
-        :n_iter => iter::Int,
-        :tree => planner.tree::PFTDPWTree,
-        :time => (time() - t0)::Float64
+    return a::A, (
+        n_iter = iter::Int,
+        tree = planner.tree::PFTDPWTree,
+        time = (time() - t0)::Float64
         )
 end
 

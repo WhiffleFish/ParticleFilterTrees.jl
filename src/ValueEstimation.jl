@@ -56,13 +56,13 @@ function estimate_value(estimator::FastRandomRolloutEstimator, pomdp::POMDP, b::
     return r::Float64
 end
 
-function sr_gen(estimator::FRRE, pomdp::POMDP{S,A,O}, s::S, a::A) where {S,A,O}
+function sr_gen(estimator::FastRandomRolloutEstimator{false}, pomdp::POMDP{S,A,O}, s::S, a::A) where {S,A,O}
     sp = rand(estimator.rng, transition(pomdp, s, a))
     r = reward(pomdp, s, a, sp)
     return sp, r
 end
 
-function sr_gen(estimator::ObsReqFRRE, pomdp::POMDP{S,A,O}, s::S, a::A) where {S,A,O}
+function sr_gen(estimator::FastRandomRolloutEstimator{true}, pomdp::POMDP{S,A,O}, s::S, a::A) where {S,A,O}
     return @gen(:sp,:r)(pomdp, s, a, estimator.rng)
 end
 
@@ -88,4 +88,17 @@ function rollout(estimator::FastRandomRolloutEstimator, pomdp::POMDP{S,A,O}, s::
     end
 
     return r_total
+end
+
+# Fallback for non-belief defined value estimators
+function estimate_value(est, pomdp::POMDP, b::PFTBelief, d::Int)
+    v = 0.0
+    for (s,w) in weighted_particles(b)
+        v += w*estimate_value(est, pomdp, s, d) # estim def in terms of state
+    end
+    return v
+end
+
+function estimate_value(est::BasicPOMCP.SolvedFOValue, pomdp::POMDP{S}, s::S, d::Int) where S
+    POMDPs.value(est.policy, s)
 end

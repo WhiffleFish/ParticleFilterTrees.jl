@@ -11,6 +11,9 @@ import StatsBase # weights, sample
 using LinearAlgebra # normalize!
 using RandomNumbers: Xorshifts # Fast RNG
 using Colors # TreeVis
+using BasicPOMCP # FOValue
+using MCTS # estimate_value
+import MCTS: convert_estimator, estimate_value
 
 export PFTDPWTree, PFTDPWSolver, PFTDPWPlanner
 
