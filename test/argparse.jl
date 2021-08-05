@@ -1,5 +1,3 @@
-using Pkg
-Pkg.activate(@__DIR__)
 using ArgParse
 
 function parse_commandline()
@@ -11,7 +9,7 @@ function parse_commandline()
             arg_type = Int
             default = 100
         "--n_procs"
-            help = "another option with an argument"
+            help = "Number of processes to use for parallel performance sims"
             arg_type = Int
             default = 1
         "--time"

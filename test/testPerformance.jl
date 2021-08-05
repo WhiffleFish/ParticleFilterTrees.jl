@@ -7,21 +7,6 @@ Testing:
     SubHunt
     VDPTag2
 =#
-include("argparse.jl")
-args = parse_commandline()
-if args["perf"]
-    @info "Running Performance Tests..."
-    const PROCS = args["n_procs"]
-    const N_SIMS = args["sims"]
-    const MAX_TIME = args["time"]
-else
-    @info "Testing Complete"
-    exit()
-end
-
-@assert PROCS > 0
-@assert N_SIMS > 0
-@assert MAX_TIME > 0
 
 using Distributed
 using Statistics
