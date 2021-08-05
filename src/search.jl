@@ -14,7 +14,7 @@ function no_obs_check_search(planner::PFTDPWPlanner, b_idx::Int, d::Int)::Float6
         ro = estimate_value(planner.solved_VE, pomdp, bp, d-1)
         total = r + discount(pomdp)*ro
     else
-        bp_idx = rand(tree.ba_children[ba_idx])
+        bp_idx = rand(sol.rng, tree.ba_children[ba_idx])
         r = tree.b_rewards[bp_idx]
         total = r + discount(pomdp)*no_obs_check_search(planner, bp_idx, d-1)
     end
@@ -26,6 +26,7 @@ function no_obs_check_search(planner::PFTDPWPlanner, b_idx::Int, d::Int)::Float6
     return total::Float64
 end
 
+
 function obs_check_search(planner::PFTDPWPlanner, b_idx::Int, d::Int)::Float64
     tree = planner.tree
     pomdp = planner.pomdp
@@ -36,7 +37,7 @@ function obs_check_search(planner::PFTDPWPlanner, b_idx::Int, d::Int)::Float64
     end
 
     a, ba_idx = act_prog_widen(planner, b_idx)
-    if sum(tree.obs_weights[ba_idx]) <= sol.k_o*tree.Nha[ba_idx]^sol.alpha_o
+    if length(tree.ba_children[ba_idx]) <= sol.k_o*tree.Nha[ba_idx]^sol.alpha_o
 
         b = tree.b[b_idx]
         p_idx = non_terminal_sample(sol.rng, pomdp, b)
@@ -52,16 +53,13 @@ function obs_check_search(planner::PFTDPWPlanner, b_idx::Int, d::Int)::Float64
         else
             @inbounds begin
                 bp_idx::Int = tree.bao_children[(ba_idx,o)]
-                ow = tree.obs_weights[ba_idx]
-                w_loc = findfirst(x->x==bp_idx, tree.ba_children[ba_idx])
-                ow[w_loc] += 1
+                push!(tree.ba_children[ba_idx], bp_idx)
                 r = tree.b_rewards[bp_idx]
             end
             total = r + discount(pomdp)*obs_check_search(planner, bp_idx, d-1)
         end
     else
-        w = tree.obs_weights[ba_idx]
-        bp_idx = tree.ba_children[ba_idx][StatsBase.sample(sol.rng, w)]
+        bp_idx = rand(sol.rng, tree.ba_children[ba_idx])
         r = tree.b_rewards[bp_idx::Int]
         total = r + discount(pomdp)*obs_check_search(planner, bp_idx, d-1)
 

@@ -86,7 +86,7 @@ function D3Trees.D3Tree(tree::PFTDPWTree{S,A,O}; show_obs::Bool=true) where {S,A
             a = $a
             Q = $Q"""
 
-        children[ba_idx + n_b] = tree.ba_children[ba_idx]
+        children[ba_idx + n_b] = unique(tree.ba_children[ba_idx])
         tooltip[ba_idx + n_b] = "ba_idx = $ba_idx"
 
         stroke_width = link_width(N,tree.Nh[ba_parent[ba_idx]])

@@ -57,13 +57,21 @@ function estimate_value(estimator::FastRandomRolloutEstimator, pomdp::POMDP, b::
 end
 
 function sr_gen(estimator::FastRandomRolloutEstimator{false}, pomdp::POMDP{S,A,O}, s::S, a::A) where {S,A,O}
-    sp = rand(estimator.rng, transition(pomdp, s, a))
+    return sr_gen(Val(false), estimator.rng, pomdp, s, a)
+end
+
+function sr_gen(estimator::FastRandomRolloutEstimator{true}, pomdp::POMDP{S,A,O}, s::S, a::A) where {S,A,O}
+    return sr_gen(Val(true), estimator.rng, pomdp, s, a)
+end
+
+function sr_gen(::Val{false}, rng::AbstractRNG, pomdp::POMDP{S,A,O}, s::S, a::A) where {S,A,O}
+    sp = rand(rng, transition(pomdp, s, a))
     r = reward(pomdp, s, a, sp)
     return sp, r
 end
 
-function sr_gen(estimator::FastRandomRolloutEstimator{true}, pomdp::POMDP{S,A,O}, s::S, a::A) where {S,A,O}
-    return @gen(:sp,:r)(pomdp, s, a, estimator.rng)
+function sr_gen(::Val{true}, rng::AbstractRNG, pomdp::POMDP{S,A,O}, s::S, a::A) where {S,A,O}
+    return @gen(:sp,:r)(pomdp, s, a, rng)
 end
 
 function rollout(estimator::FastRandomRolloutEstimator, pomdp::POMDP{S,A,O}, s::S, depth::Int) where {S,A,O}

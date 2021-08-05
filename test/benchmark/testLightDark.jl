@@ -22,7 +22,7 @@ planner = solve(solver, LightDark)
 
 @benchmark a_info = action_info(planner, initialstate(LightDark)) (seconds=120)
 
-@profiler a_info = action_info(planner, initialstate(LightDark))
+@profiler a_info = action_info(planner, initialstate(LightDark)) recur=:flat
 
 a, info = action_info(planner, initialstate(LightDark))
 t = D3Tree(info[:tree])

@@ -14,6 +14,8 @@ planner = solve(solver, tiger)
 
 @benchmark a_info = action_info(planner, initialstate(tiger)) (seconds=120)
 
-@profiler a,info = action_info(planner, initialstate(tiger))
+@benchmark a_info = action_info(planner, initialstate(tiger))
+
+@profiler a,info = action_info(planner, initialstate(tiger)) recur=:flat
 a,info = action_info(planner, initialstate(tiger))
 inchrome(D3Tree(info[:tree]))

@@ -1,5 +1,5 @@
-function next_action(pomdp::POMDP)
-    return rand(actions(pomdp))
+function next_action(rng::AbstractRNG, pomdp::POMDP)
+    return rand(rng, actions(pomdp))
 end
 
 function UCB(Q::Float64, Nh::Int, Nha::Int, c::Float64)::Float64
@@ -44,7 +44,7 @@ function progressive_widen(planner::PFTDPWPlanner, b_idx::Int)
     k_a, alpha_a, c = sol.k_a, sol.alpha_a, sol.c
 
     if length(tree.b_children[b_idx]) <= k_a*tree.Nh[b_idx]^alpha_a
-        a = next_action(planner.pomdp)
+        a = next_action(sol.rng, planner.pomdp)
         if isempty(filter(x->x[1] == a, tree.b_children[b_idx]))
             insert_action!(planner, tree, b_idx, a, planner.sol.check_repeat_obs)
         end

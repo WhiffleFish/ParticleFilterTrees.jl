@@ -36,7 +36,6 @@ struct PFTDPWTree{S,A,O}
 
     bao_children::Dict{Tuple{Int,O},Int} # (ba_idx,O) => bp_idx
     ba_children::Vector{Vector{Int}} # ba_idx => [bp_idx, bp_idx, bp_idx, ...]
-    obs_weights::Dict{Int,StatsBase.Weights{Int, Int, Vector{Int}}}
 
     function PFTDPWTree{S,A,O}(sz::Int, check_repeat_obs::Bool) where {S,A,O}
         sz = min(sz, 100_000)
@@ -51,7 +50,6 @@ struct PFTDPWTree{S,A,O}
 
             sizehint!(Dict{Tuple{Int,O},Int}(), check_repeat_obs ? sz : 0),
             sizehint!(Vector{Int}[], sz),
-            sizehint!(Dict{Int,StatsBase.Weights{Int, Int, Vector{Int}}}(), check_repeat_obs ? sz : 0)
             )
     end
 end
@@ -74,7 +72,7 @@ end
 
 include("cache.jl")
 
-struct PFTDPWPlanner{M<:POMDP, SOL<:PFTDPWSolver, TREE<:PFTDPWTree, VE, A, S} <: Policy
+struct PFTDPWPlanner{M<:POMDP, SOL<:PFTDPWSolver, TREE<:PFTDPWTree, VE, A, S, T} <: Policy
     pomdp::M
     sol::SOL
     tree::TREE
@@ -82,6 +80,7 @@ struct PFTDPWPlanner{M<:POMDP, SOL<:PFTDPWSolver, TREE<:PFTDPWTree, VE, A, S} <:
 
     _placeholder_a::A
     _SA::Int # Size of action space (for sizehinting)
+    obs_req::T
     cache::BeliefCache{S}
 end
 

@@ -49,7 +49,7 @@ function GenBelief(
             (sp, r) = sample_sp, sample_r
         else
             if !isterminal(pomdp, s)
-                (sp, r) = @gen(:sp,:r)(pomdp, s, a, rng)
+                (sp, r) = sr_gen(planner.obs_req, rng, pomdp, s, a) # @gen(:sp,:r)(pomdp, s, a, rng)
             else
                 (sp,r) = (s, 0.0)
             end

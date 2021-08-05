@@ -3,7 +3,7 @@ function POMDPs.solve(sol::PFTDPWSolver, pomdp::POMDP{S,A,O})::PFTDPWPlanner whe
     a = rand(act)
 
     solved_ve = BasicPOMCP.convert_estimator(sol.value_estimator, sol, pomdp)
-
+    obs_req = is_obs_required(pomdp)
     if !sol.enable_action_pw
         try
             SA = length(act)
@@ -24,6 +24,7 @@ function POMDPs.solve(sol::PFTDPWSolver, pomdp::POMDP{S,A,O})::PFTDPWPlanner whe
         solved_ve,
         a,
         SA,
+        Val(obs_req),
         cache
     )
 end
@@ -57,7 +58,7 @@ function POMDPModelTools.action_info(planner::PFTDPWPlanner, b)
     end
 
     a, a_idx = UCB1action(planner, planner.tree, 1, 0.0)
-    if a_idx == 0; a = rand(actions(pomdp)); end
+    if a_idx == 0; a = rand(sol.rng, actions(pomdp)); end
 
     return a::A, (
         n_iter = iter::Int,
@@ -85,7 +86,6 @@ function Base.empty!(tree::PFTDPWTree)
 
     empty!(tree.bao_children)
     empty!(tree.ba_children)
-    empty!(tree.obs_weights)
 
     nothing
 end
