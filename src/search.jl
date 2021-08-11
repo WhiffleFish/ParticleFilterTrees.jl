@@ -51,11 +51,9 @@ function obs_check_search(planner::PFTDPWPlanner, b_idx::Int, d::Int)::Float64
             total = r + discount(pomdp)*ro
 
         else
-            @inbounds begin
-                bp_idx::Int = tree.bao_children[(ba_idx,o)]
-                push!(tree.ba_children[ba_idx], bp_idx)
-                r = tree.b_rewards[bp_idx]
-            end
+            bp_idx::Int = tree.bao_children[(ba_idx,o)]
+            push!(tree.ba_children[ba_idx], bp_idx)
+            r = tree.b_rewards[bp_idx]
             total = r + discount(pomdp)*obs_check_search(planner, bp_idx, d-1)
         end
     else
