@@ -41,19 +41,11 @@ const ObsReqFRRE = FastRandomRolloutEstimator{true, A, RNG} where {A,RNG}
 
 action(p::FastRandomRolloutEstimator, ::Any) = rand(p.rng, p.actions)
 
-function convert_estimator(estimator::FastRandomSolver, ::Any, pomdp::POMDP)
+function BasicPOMCP.convert_estimator(estimator::FastRandomSolver, ::Any, pomdp::POMDP)
 
     obs_req = is_obs_required(pomdp)
 
     return FastRandomRolloutEstimator(pomdp, estimator, obs_req)
-end
-
-function estimate_value(estimator::FastRandomRolloutEstimator, pomdp::POMDP, b::PFTBelief, depth::Int)
-    r = 0.0
-    for (s,w) in weighted_particles(b)
-        r += w*rollout(estimator, pomdp, s, depth)
-    end
-    return r::Float64
 end
 
 function sr_gen(estimator::FastRandomRolloutEstimator{false}, pomdp::POMDP{S,A,O}, s::S, a::A) where {S,A,O}
@@ -74,7 +66,7 @@ function sr_gen(::Val{true}, rng::AbstractRNG, pomdp::POMDP{S,A,O}, s::S, a::A) 
     return @gen(:sp,:r)(pomdp, s, a, rng)
 end
 
-function rollout(estimator::FastRandomRolloutEstimator, pomdp::POMDP{S,A,O}, s::S, depth::Int) where {S,A,O}
+function estimate_value(estimator::FastRandomRolloutEstimator, pomdp::POMDP{S,A,O}, s::S, depth::Int) where {S,A,O}
 
     disc = 1.0
     r_total = 0.0
@@ -99,7 +91,7 @@ function rollout(estimator::FastRandomRolloutEstimator, pomdp::POMDP{S,A,O}, s::
 end
 
 # Fallback for non-belief defined value estimators
-function estimate_value(est, pomdp::POMDP, b::PFTBelief, d::Int)
+function estimate_value(est, pomdp::POMDP{S}, b::PFTBelief{S}, d::Int) where S
     v = 0.0
     for (s,w) in weighted_particles(b)
         v += w*estimate_value(est, pomdp, s, d) # estim def in terms of state

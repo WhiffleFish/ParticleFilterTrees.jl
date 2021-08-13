@@ -44,14 +44,3 @@ function non_terminal_sample(rng::AbstractRNG, pomdp::POMDP, b::PFTBelief)
 end
 
 Random.rand(b::PFTBelief) = Random.rand(Random.GLOBAL_RNG, b)
-
-StatsBase.mean(b::PFTBelief{T}) where {T <: Number} = dot(b.weights, b.particles)
-StatsBase.mean(b::PFTBelief{T}) where {T <: Vector} = reduce(hcat, b.particles) * b.weights
-function StatsBase.cov(b::PFTBelief{T}) where {T <: Number} # uncorrected covariance
-    centralized = b.particles .- mean(b)
-    sum(centralized .* b.weights .* centralized)
-end
-function StatsBase.cov(b::PFTBelief{T}) where {T <: Vector} # uncorrected covariance
-    centralized = reduce(hcat, b.particles) .- mean(b)
-    (centralized .* b.weights') * centralized'
-end

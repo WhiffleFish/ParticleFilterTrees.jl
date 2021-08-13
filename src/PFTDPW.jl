@@ -1,19 +1,14 @@
 module PFTDPW
 
-using POMDPSimulators # RolloutSimulator
 using POMDPs
 using Parameters # @with_kw
 using Random # Random.GLOBAL_RNG
-using BeliefUpdaters # NothingUpdater
 using D3Trees # TreeVis
 using POMDPModelTools # action_info
-import StatsBase # weights, sample
 using LinearAlgebra # normalize!
 using RandomNumbers: Xorshifts # Fast RNG
 using Colors # TreeVis
 using BasicPOMCP # FOValue
-using MCTS # estimate_value
-import MCTS: convert_estimator, estimate_value
 
 export PFTDPWTree, PFTDPWSolver, PFTDPWPlanner
 

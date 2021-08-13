@@ -32,8 +32,6 @@ tiger_sol_VI = PFTDPWSolver(max_time=0.1, max_depth=20, enable_action_pw=false, 
 tiger_planner = solve(tiger_sol, tiger)
 tiger_planner_VI = solve(tiger_sol_VI, tiger)
 
-tiger_planner_VI.solved_VE
-
 baby_sol = tiger_sol
 baby_sol_VI = tiger_sol_VI
 baby_planner = solve(baby_sol, baby)
@@ -57,7 +55,6 @@ tag_planner = solve(tag_sol, tag)
 ro = RolloutSimulator(max_steps=100)
 
 @show simulate(ro, tiger, tiger_planner, BootstrapFilter(tiger, 1_000))
-tiger_planner_VI.solved_VE
 @show simulate(ro, tiger, tiger_planner_VI, BootstrapFilter(tiger, 1_000))
 
 @show simulate(ro, baby, baby_planner, BootstrapFilter(baby, 1_000))
