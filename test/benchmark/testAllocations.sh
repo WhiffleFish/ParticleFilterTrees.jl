@@ -1,1 +1,1 @@
-julia --track-allocation=user test/testAllocations.jl
+julia --track-allocation=user test/benchmark/testAllocations.jl

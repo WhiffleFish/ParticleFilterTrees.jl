@@ -6,7 +6,7 @@ function UCB(Q::Float64, Nh::Int, Nha::Int, c::Float64)::Float64
     return Nha > 0 ? Q + c*sqrt(log(Nh)/Nha) : Inf
 end
 
-@inline function _unsafeUCB(Q::Float64, Nh::Int, Nha::Int, c::Float64)::Float64
+function _unsafeUCB(Q::Float64, Nh::Int, Nha::Int, c::Float64)::Float64
     return Q + c*sqrt(log(Nh)/Nha)
 end
 
@@ -45,8 +45,8 @@ function progressive_widen(planner::PFTDPWPlanner, b_idx::Int)
 
     if length(tree.b_children[b_idx]) <= k_a*tree.Nh[b_idx]^alpha_a
         a = next_action(sol.rng, planner.pomdp)
-        if isempty(filter(x->x[1] == a, tree.b_children[b_idx]))
-            insert_action!(planner, tree, b_idx, a, planner.sol.check_repeat_obs)
+        if !any(x[1] == a for x in tree.b_children[b_idx])
+            insert_action!(planner, tree, b_idx, a)
         end
     end
 
@@ -59,7 +59,7 @@ function act_widen(planner::PFTDPWPlanner, b_idx::Int)
 
     if isempty(tree.b_children[b_idx])
         for a in actions(planner.pomdp)
-            insert_action!(planner, tree, b_idx, a, planner.sol.check_repeat_obs)
+            insert_action!(planner, tree, b_idx, a)
         end
     end
 

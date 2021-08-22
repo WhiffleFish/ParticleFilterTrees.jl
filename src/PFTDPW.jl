@@ -8,43 +8,45 @@ using POMDPModelTools # action_info
 using LinearAlgebra # normalize!
 using RandomNumbers: Xorshifts # Fast RNG
 using Colors # TreeVis
-using BasicPOMCP # FOValue
+using BasicPOMCP # FOValue, convert_estimator
+using PushVectors
 
 export PFTDPWTree, PFTDPWSolver, PFTDPWPlanner
 
 export PFTBelief
 
 include("belief.jl")
+include("NestedPushVectors.jl")
 
 export FastRandomSolver, FastRandomRolloutEstimator
 
 include("ValueEstimation.jl")
 
 struct PFTDPWTree{S,A,O}
-    Nh::Vector{Int}
-    Nha::Vector{Int}# Number of times a history-action node has been visited
-    Qha::Vector{Float64} # Map ba node to associated Q value
+    Nh::PV{Int}
+    Nha::PV{Int}# Number of times a history-action node has been visited
+    Qha::PV{Float64} # Map ba node to associated Q value
 
-    b::Vector{PFTBelief{S}}
-    b_children::Vector{Vector{Tuple{A,Int}}}# b_idx => [(a,ba_idx), ...]
-    b_rewards::Vector{Float64}# Map b' node index to immediate reward associated with trajectory bao where b' = τ(bao)
+    b::PV{PFTBelief{S}}
+    b_children::NPV{Tuple{A,Int}}# b_idx => [(a,ba_idx), ...]
+    b_rewards::PV{Float64}# Map b' node index to immediate reward associated with trajectory bao where b' = τ(bao)
 
     bao_children::Dict{Tuple{Int,O},Int} # (ba_idx,O) => bp_idx
-    ba_children::Vector{Vector{Int}} # ba_idx => [bp_idx, bp_idx, bp_idx, ...]
+    ba_children::NPV{Int} # ba_idx => [bp_idx, bp_idx, bp_idx, ...]
 
-    function PFTDPWTree{S,A,O}(sz::Int, check_repeat_obs::Bool) where {S,A,O}
+    function PFTDPWTree{S,A,O}(sz::Int, check_repeat_obs::Bool=true, k_o=10, k_a=10) where {S,A,O}
         sz = min(sz, 100_000)
         return new(
-            sizehint!(Int[], sz),
-            sizehint!(Int[], sz),
-            sizehint!(Float64[], sz),
+            PushVector{Int}(sz),
+            PushVector{Int}(sz),
+            PushVector{Float64}(sz),
 
-            sizehint!(PFTBelief{S}[], sz),
-            sizehint!(Vector{Tuple{A,Int}}[], sz),
-            sizehint!(Float64[], sz),
+            PushVector{PFTBelief{S}}(sz),
+            NestedPushVector{Tuple{A,Int}}(floor(Int,k_o), sz),
+            PushVector{Float64}(sz),
 
             sizehint!(Dict{Tuple{Int,O},Int}(), check_repeat_obs ? sz : 0),
-            sizehint!(Vector{Int}[], sz),
+            NestedPushVector{Int}(floor(Int,k_a), sz)
             )
     end
 end

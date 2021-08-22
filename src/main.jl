@@ -20,7 +20,7 @@ function POMDPs.solve(sol::PFTDPWSolver, pomdp::POMDP{S,A,O})::PFTDPWPlanner whe
     return PFTDPWPlanner(
         pomdp,
         sol,
-        PFTDPWTree{S,A,O}(sol.tree_queries, sol.check_repeat_obs),
+        PFTDPWTree{S,A,O}(sol.tree_queries, sol.check_repeat_obs, sol.k_o, sol.k_a),
         solved_ve,
         a,
         SA,
@@ -42,7 +42,7 @@ function POMDPModelTools.action_info(planner::PFTDPWPlanner, b)
 
     empty!(planner.tree)
     free!(planner.cache)
-    insert_root!(planner.sol.rng, planner.tree, pomdp, b, sol.n_particles)
+    insert_root!(planner, b)
 
     iter = 0
     if planner.sol.check_repeat_obs
@@ -58,6 +58,8 @@ function POMDPModelTools.action_info(planner::PFTDPWPlanner, b)
     end
 
     a, a_idx = UCB1action(planner, planner.tree, 1, 0.0)
+
+    # If not enough time for even 1 tree query -> give random action
     if a_idx == 0; a = rand(sol.rng, actions(pomdp)); end
 
     return a::A, (

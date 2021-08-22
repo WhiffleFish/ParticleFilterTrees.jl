@@ -94,7 +94,7 @@ w[2] = 0.0
 test_b = PFTDPW.PFTBelief{SubState}(p, w, 0.0)
 
 push!(subhunt_planner.tree.b, test_b)
-push!(subhunt_planner.tree.b_children, Tuple{A,Int}[])
+PFTDPW.freenext!(subhunt_planner.tree.b_children)
 push!(subhunt_planner.tree.Nh, 0)
 push!(subhunt_planner.tree.b_rewards, 0.0)
 
