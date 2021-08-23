@@ -6,7 +6,7 @@ mutable struct BeliefCache{S}
 end
 
 function BeliefCache{S}(sol::PFTDPWSolver) where S
-    sz = min(sol.tree_queries, 100_000)
+    sz = min(sol.tree_queries, sol.beliefcache_size)
     n_p = sol.n_particles
     return BeliefCache{S}(
         [Vector{S}(undef, n_p) for _ in  1:sz],

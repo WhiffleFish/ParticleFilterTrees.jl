@@ -16,14 +16,13 @@ function POMDPs.solve(sol::PFTDPWSolver, pomdp::POMDP{S,A,O})::PFTDPWPlanner whe
     end
 
     cache = BeliefCache{S}(sol)
-
+    sz = min(sol.tree_queries, sol.treecache_size)
     return PFTDPWPlanner(
         pomdp,
         sol,
-        PFTDPWTree{S,A,O}(sol.tree_queries, sol.check_repeat_obs, sol.k_o, sol.k_a),
+        PFTDPWTree{S,A,O}(sz, sol.check_repeat_obs, sol.k_o, sol.k_a),
         solved_ve,
         a,
-        SA,
         Val(obs_req),
         cache
     )

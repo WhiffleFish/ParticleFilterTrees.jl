@@ -22,6 +22,19 @@ export FastRandomSolver, FastRandomRolloutEstimator
 
 include("ValueEstimation.jl")
 
+
+"""
+...
+- `Nh` - Number of times history node has been visited
+- `Nha` - Number of times action node has been visited
+- `Qha` - Q value associated with some action node
+- `b` - Vector of beliefs (`PFTBelief`)
+- `b_children` - Mapping belief ID to (action, action ID) tuple
+- `b_rewards` - R(b,a) where index is ID of b' where b' = τ(b,a,o)
+- `bao_children` - `(ba_idx,O) => bp_idx`
+- `ba_children` - `ba_idx => [bp_idx, bp_idx, bp_idx, ...]`
+...
+"""
 struct PFTDPWTree{S,A,O}
     Nh::PV{Int}
     Nha::PV{Int}# Number of times a history-action node has been visited
@@ -35,7 +48,6 @@ struct PFTDPWTree{S,A,O}
     ba_children::NPV{Int} # ba_idx => [bp_idx, bp_idx, bp_idx, ...]
 
     function PFTDPWTree{S,A,O}(sz::Int, check_repeat_obs::Bool=true, k_o=10, k_a=10) where {S,A,O}
-        sz = min(sz, 100_000)
         return new(
             PushVector{Int}(sz),
             PushVector{Int}(sz),
@@ -51,6 +63,26 @@ struct PFTDPWTree{S,A,O}
     end
 end
 
+
+"""
+...
+- `max_depth::Int = 20` - Maximum tree search depth
+- `n_particles::Int = 100` - Number of particles representing belief
+- `c::Float64 = 1.0` - UCB exploration parameter
+- `k_o::Float64 = 10.0` - Initial observation widening parameter
+- `alpha_o::Float64 = 0.0` - Observation progressive widening parameter
+- `k_a::Float64 = 5.0` - Initial action widening parameter
+- `alpha_a::Float64 = 0.0` - Action progressive widening parameter
+- `tree_queries::Int = 1_000` - Maximum number of tree search iterations
+- `max_time::Float64 = Inf` - Maximum tree search time
+- `rng::RNG = Xorshifts.Xoroshiro128Star()` - Random number generator
+- `value_estimator::VE = FastRandomSolver()` - Belief node value estimator
+- `check_repeat_obs::Bool = true` - Check that repeat observations do not overwrite beliefs (added dictionary overhead)
+- `enable_action_pw::Bool = false` - Alias for `alpha_a = 0.0`
+- `beliefcache_size::Int = 100_000` - Number of particle/weight vectors to cache offline
+- `treecache_size::Int = 100_000` - Number of belief/action nodes to preallocate in tree
+...
+"""
 @with_kw struct PFTDPWSolver{RNG<:AbstractRNG, VE} <: Solver
     max_depth::Int         = 20
     n_particles::Int       = 100
@@ -65,6 +97,8 @@ end
     value_estimator::VE    = FastRandomSolver()
     check_repeat_obs::Bool = true
     enable_action_pw::Bool = false
+    beliefcache_size::Int  = 100_000
+    treecache_size::Int    = 100_000
 end
 
 include("cache.jl")
@@ -76,7 +110,6 @@ struct PFTDPWPlanner{M<:POMDP, SOL<:PFTDPWSolver, TREE<:PFTDPWTree, VE, A, S, T}
     solved_VE::VE
 
     _placeholder_a::A
-    _SA::Int # Size of action space (for sizehinting)
     obs_req::T
     cache::BeliefCache{S}
 end
