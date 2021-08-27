@@ -10,6 +10,9 @@ using RandomNumbers: Xorshifts # Fast RNG
 using Colors # TreeVis
 using BasicPOMCP # FOValue, convert_estimator
 using PushVectors
+using ParticleFilters
+using POMDPPolicies
+using ParticleFilters # action(::AlphaVectorPolicy, b)
 
 export PFTDPWTree, PFTDPWSolver, PFTDPWPlanner
 
@@ -74,7 +77,7 @@ end
 - `k_a::Float64 = 5.0` - Initial action widening parameter
 - `alpha_a::Float64 = 0.0` - Action progressive widening parameter
 - `tree_queries::Int = 1_000` - Maximum number of tree search iterations
-- `max_time::Float64 = Inf` - Maximum tree search time
+- `max_time::Float64 = Inf` - Maximum tree search time (in seconds)
 - `rng::RNG = Xorshifts.Xoroshiro128Star()` - Random number generator
 - `value_estimator::VE = FastRandomSolver()` - Belief node value estimator
 - `check_repeat_obs::Bool = true` - Check that repeat observations do not overwrite beliefs (added dictionary overhead)

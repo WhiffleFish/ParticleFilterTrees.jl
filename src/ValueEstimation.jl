@@ -102,3 +102,147 @@ end
 function estimate_value(est::BasicPOMCP.SolvedFOValue, pomdp::POMDP{S}, s::S, d::Int) where S
     POMDPs.value(est.policy, s)
 end
+
+
+function rollout(est::BasicPOMCP.SolvedPORollout, pomdp::POMDP{S}, b::ParticleCollection{S}, s::S, d::Int) where S
+
+    updater = est.updater
+    rng = est.rng
+    policy = est.policy
+    disc = 1.0
+    r_total = 0.0
+    step = 1
+
+    while !isterminal(pomdp, s) && step <= d
+
+        a = ParticleFilters.action(policy, b)
+
+        sp, o, r = @gen(:sp,:o,:r)(pomdp, s, a, rng)
+
+        r_total += disc*r
+
+        s = sp
+
+        bp = update(updater, b, a, o)
+        b = bp
+
+        disc *= discount(pomdp)
+        step += 1
+    end
+
+    return r_total
+end
+
+struct PFTFilter{PM,RNG<:AbstractRNG,PMEM} <: Updater
+    pomdp::PM
+    rng::RNG
+    _particle_memory::PMEM
+    _weight_memory::Vector{Float64}
+end
+
+function PFTFilter(pomdp::POMDP, n_p::Int)
+    S = statetype(pomdp)
+    return PFTFilter(
+        pomdp,
+        Xorshifts.Xoroshiro128Star(),
+        ParticleCollection(Vector{S}(undef,n_p)),
+        Vector{Float64}(undef, n_p)
+        )
+end
+
+### BAD: For predict! source and destination arrays point to the same place / they are the same
+function initialize_belief(pf::PFTFilter, b::PFTBelief)
+    b_ = pf._particle_memory
+    resample!(b,b_,pf.rng)
+end
+
+function initialize_belief(up::BasicParticleFilter, b::PFTBelief)
+    return ParticleCollection([rand(b) for _ in 1:up.n_init])
+end
+
+function estimate_value(est::BasicPOMCP.SolvedPORollout, pomdp::POMDP{S}, b::PFTBelief{S}, d::Int) where S
+    v = 0.0
+    b_ = initialize_belief(est.updater, b)
+    for (s,w) in weighted_particles(b)
+        v += w*rollout(est, pomdp, b_, s, d)
+    end
+    return v
+end
+
+function update!(up::PFTFilter, b::ParticleCollection, a, o)
+    pm = up._particle_memory
+    wm = up._weight_memory
+    predict!(pm.particles, up.pomdp, b, a, up.rng)
+    reweight!(wm, up.pomdp, b, a, pm.particles, o)
+    resample!(pm, wm, b, up.rng)
+end
+
+function resample!(b::ParticleCollection, w::Vector{Float64}, bp::ParticleCollection, rng::AbstractRNG)
+    n_p = length(b.particles)
+    ws = sum(w)
+    ps = bp.particles
+
+    r = rand(rng)*ws/n_p
+    c = w[1]
+    i = 1
+    U = r
+    for m in 1:n_p
+        while U > c && i < n_p
+            i += 1
+            c += w[i]
+        end
+        U += ws/n_p
+        ps[m] = b.particles[i]
+    end
+    return bp
+end
+
+function resample!(b::PFTBelief, bp::ParticleCollection, rng::AbstractRNG)
+    n_p = n_particles(b)
+    w = b.weights
+    ws = sum(w)
+    ps = bp.particles
+
+    r = rand(rng)*ws/n_p
+    c = w[1]
+    i = 1
+    U = r
+    for m in 1:n_p
+        while U > c && i < n_p
+            i += 1
+            c += w[i]
+        end
+        U += ws/n_p
+        ps[m] = b.particles[i]
+    end
+    return bp
+end
+
+
+# function rollout(est::BasicPOMCP.SolvedPORollout, pomdp::POMDP{S}, b::ParticleCollection{S}, s::S, d::Int) where S
+#
+#     updater = est.updater
+#     rng = est.rng
+#     policy = est.policy
+#     disc = 1.0
+#     r_total = 0.0
+#     step = 1
+#
+#     while !isterminal(pomdp, s) && step <= d
+#
+#         a = ParticleFilters.action(policy, b)
+#
+#         sp, o, r = @gen(:sp,:o,:r)(pomdp, s, a, rng)
+#
+#         r_total += disc*r
+#
+#         s = sp
+#
+#         update!(updater, b, a, o)
+#
+#         disc *= discount(pomdp)
+#         step += 1
+#     end
+#
+#     return r_total
+# end
