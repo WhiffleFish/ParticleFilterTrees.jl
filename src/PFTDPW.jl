@@ -8,9 +8,11 @@ using POMDPModelTools # action_info
 using LinearAlgebra # normalize!
 using RandomNumbers: Xorshifts # Fast RNG
 using Colors # TreeVis
-using BasicPOMCP # FOValue, convert_estimator
+using BasicPOMCP
+import MCTS: convert_estimator, estimate_value, convert_to_policy
 using PushVectors
 using ParticleFilters
+import ParticleFilters: n_particles, particles, weighted_particles, weight_sum, weight, particle, weights
 using POMDPPolicies
 using ParticleFilters # action(::AlphaVectorPolicy, b)
 
@@ -23,6 +25,7 @@ include("NestedPushVectors.jl")
 
 export FastRandomSolver, FastRandomRolloutEstimator
 
+include("FastBootstrapFilter.jl")
 include("ValueEstimation.jl")
 
 

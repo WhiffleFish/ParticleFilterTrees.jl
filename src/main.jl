@@ -2,7 +2,7 @@ function POMDPs.solve(sol::PFTDPWSolver, pomdp::POMDP{S,A,O})::PFTDPWPlanner whe
     act = actions(pomdp)
     a = rand(act)
 
-    solved_ve = BasicPOMCP.convert_estimator(sol.value_estimator, sol, pomdp)
+    solved_ve = convert_estimator(sol.value_estimator, sol, pomdp)
     obs_req = is_obs_required(pomdp)
     if !sol.enable_action_pw
         try
