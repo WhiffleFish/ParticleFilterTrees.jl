@@ -2,7 +2,6 @@ struct PFTFilter{PM<:POMDP,RNG<:AbstractRNG,PMEM} <: Updater
     pomdp::PM
     rng::RNG
     p::PMEM # initial and post-resampling particles (p → pp → p)
-    pp::PMEM # post-prediction but pre-resampling particles
     w::Vector{Float64}
 end
 
@@ -11,7 +10,6 @@ function PFTFilter(pomdp::POMDP, n_p::Int, rng::AbstractRNG)
     return PFTFilter(
         pomdp,
         rng,
-        ParticleCollection(Vector{S}(undef,n_p)),
         ParticleCollection(Vector{S}(undef,n_p)),
         Vector{Float64}(undef, n_p)
         )
@@ -23,19 +21,23 @@ function initialize_belief!(pf::PFTFilter, source::PFTBelief, dest::ParticleColl
     resample!(source, dest, pf.rng)
 end
 
+function initialize_belief(pf::PFTFilter, source::PFTBelief{S}) where S
+    return initialize_belief!(pf, source, ParticleCollection(Vector{S}(undef)))
+end
+
 """
 predict!
-    - propagate b(up.p) → up.pp
+    - propagate b(up.p) → up.p
 reweight!
-    - update up._particle_weights
-    - s ∈ b(up.p), sp ∈ up.pp
+    - update up.w
+    - s ∈ b(up.p), sp ∈ up.p
 resample!
-    - resample up.pp → b (up.p)
+    - resample up.p → b
 """
 function update!(up::PFTFilter, b::ParticleCollection, a, o)
-    predict!(up.pp, up.pomdp, b, a, up.rng) # b → up.pp
-    reweight!(up.w, up.pomdp, b, a, up.pp.particles, o)
-    resample!(up.pp, up.w, b, up.rng) # up.pp → b
+    predict!(up.p, up.pomdp, b, a, up.rng) # b → up.p
+    reweight!(up.w, up.pomdp, b, a, up.p.particles, o)
+    resample!(up.p, up.w, b, up.rng) # up.p → b
 end
 
 POMDPs.update(up::PFTFilter, b::ParticleCollection, a, o) = update!(up,b,a,o)
@@ -51,6 +53,7 @@ function predict!(pm::ParticleCollection, m::POMDP, b::ParticleCollection, a, rn
             @inbounds pm_particles[i] = sp
         end
     end
+    # all_terminal && @warn "All particles terminal in internal filter"
     return all_terminal
 end
 

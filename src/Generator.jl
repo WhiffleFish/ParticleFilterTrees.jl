@@ -45,7 +45,7 @@ function GenBelief(
 
     for (i,(s,w)) in enumerate(weighted_particles(b))
         # Propagation
-        if i == p_idx
+        if i === p_idx
             (sp, r) = sample_sp, sample_r
         else
             if !isterminal(pomdp, s)
