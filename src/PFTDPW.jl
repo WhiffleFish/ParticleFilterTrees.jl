@@ -13,20 +13,19 @@ import MCTS: convert_estimator, estimate_value, convert_to_policy
 using PushVectors
 using ParticleFilters
 import ParticleFilters: n_particles, particles, weighted_particles, weight_sum, weight, particle, weights
-using POMDPPolicies
 using ParticleFilters # action(::AlphaVectorPolicy, b)
 
 export PFTDPWTree, PFTDPWSolver, PFTDPWPlanner
 
 export PFTBelief
 
-include("belief.jl")
-include("NestedPushVectors.jl")
+include(joinpath("util","belief.jl"))
+include(joinpath("util","NestedPushVectors.jl"))
 
 export FastRandomSolver, FastRandomRolloutEstimator
 
-include("FastBootstrapFilter.jl")
-include("ValueEstimation.jl")
+include(joinpath("util","FastBootstrapFilter.jl"))
+include(joinpath("util","ValueEstimation.jl"))
 
 
 """
@@ -86,10 +85,12 @@ end
 - `check_repeat_obs::Bool = true` - Check that repeat observations do not overwrite beliefs (added dictionary overhead)
 - `enable_action_pw::Bool = false` - Alias for `alpha_a = 0.0`
 - `beliefcache_size::Int = 100_000` - Number of particle/weight vectors to cache offline
-- `treecache_size::Int = 100_000` - Number of belief/action nodes to preallocate in tree
+- `treecache_size::Int = 100_000` - Number of belief/action nodes to preallocate in tree (reduces `Base._growend!` calls)
 ...
 """
 @with_kw struct PFTDPWSolver{RNG<:AbstractRNG, VE} <: Solver
+    tree_queries::Int      = 1_000
+    max_time::Float64      = Inf # (seconds)
     max_depth::Int         = 20
     n_particles::Int       = 100
     c::Float64             = 1.0
@@ -97,8 +98,6 @@ end
     alpha_o::Float64       = 0.0 # Observation Progressive widening parameter
     k_a::Float64           = 5.0
     alpha_a::Float64       = 0.0 # Action Progressive widening parameter
-    tree_queries::Int      = 1_000
-    max_time::Float64      = Inf # (seconds)
     rng::RNG               = Xorshifts.Xoroshiro128Star()
     value_estimator::VE    = FastRandomSolver()
     check_repeat_obs::Bool = true
@@ -107,7 +106,7 @@ end
     treecache_size::Int    = 100_000
 end
 
-include("cache.jl")
+include(joinpath("util","cache.jl"))
 
 struct PFTDPWPlanner{M<:POMDP, SOL<:PFTDPWSolver, TREE<:PFTDPWTree, VE, A, S, T} <: Policy
     pomdp::M

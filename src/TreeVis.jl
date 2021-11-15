@@ -17,7 +17,7 @@ function D3Trees.D3Tree(tree::PFTDPWTree{S,A,O}; show_obs::Bool=true) where {S,A
     show_obs && ( o_dict = Dict{Int,O}(bp_idx=>o for ((ba_idx,o),bp_idx) in tree.bao_children) )
 
     ba_parent = Dict{Int, Int}()
-    b_parent = Dict{Int,Int}(())
+    b_parent = Dict{Int,Int}()
 
     for (ba_idx,bp_list) in enumerate(tree.ba_children)
         for bp_idx in bp_list

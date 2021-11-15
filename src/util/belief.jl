@@ -12,13 +12,15 @@ function PFTBelief(particles::Vector{T}, weights::Vector{Float64}, pomdp::POMDP)
     return PFTBelief{T}(particles, weights, terminal_ws)
 end
 
-@inline n_particles(b::PFTBelief) = length(b.particles)
-@inline particles(p::PFTBelief) = p.particles
-weighted_particles(b::PFTBelief) = (b.particles[i]=>b.weights[i] for i in 1:length(b.particles))
-@inline weight_sum(b::PFTBelief) = 1.0
-@inline weight(b::PFTBelief, i::Int) = b.weights[i]
-@inline particle(b::PFTBelief, i::Int) = b.particles[i]
-@inline weights(b::PFTBelief) = b.weights
+@inline ParticleFilters.n_particles(b::PFTBelief) = length(b.particles)
+@inline ParticleFilters.particles(p::PFTBelief) = p.particles
+ParticleFilters.weighted_particles(b::PFTBelief) = (
+    b.particles[i]=>b.weights[i] for i in 1:length(b.particles)
+)
+@inline ParticleFilters.weight_sum(b::PFTBelief) = 1.0
+@inline ParticleFilters.weight(b::PFTBelief, i::Int) = b.weights[i]
+@inline ParticleFilters.particle(b::PFTBelief, i::Int) = b.particles[i]
+@inline ParticleFilters.weights(b::PFTBelief) = b.weights
 
 function Random.rand(rng::AbstractRNG, b::PFTBelief)
     t = rand(rng)

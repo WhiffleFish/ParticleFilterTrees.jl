@@ -9,6 +9,8 @@ using JET
 using JETTest
 include(joinpath(@__DIR__,"../LightDarkPOMDP.jl"))
 
+using QMDP
+VE = PFTDPW.PORollout(QMDPSolver(), n_rollouts=10)
 solver = PFTDPWSolver(
     tree_queries=10_000,
     k_o=5,
@@ -23,7 +25,7 @@ action(planner, initialstate(LightDark))
 
 @report_dispatch action(planner, initialstate(LightDark))
 
-@benchmark action(planner, initialstate(LightDark))
+@benchmark action(planner, $(initialstate(LightDark)))
 
 @benchmark action(planner, initialstate(LightDark)) (seconds=120)
 

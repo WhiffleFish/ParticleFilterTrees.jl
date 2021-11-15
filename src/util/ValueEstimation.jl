@@ -113,11 +113,11 @@ struct PORollout{SOL<:Solver, UPD<:Updater, RNG<:AbstractRNG}
     n_ro::Int # number of rollouts per value estimation. if 0, rollout all particles.
 end
 
-function PORollout(sol::Solver, rng::AbstractRNG; n_rollouts::Int=0)
+function PORollout(sol::Solver, rng::AbstractRNG; n_rollouts::Int=1)
     return PORollout(sol, PlaceHolderUpdater(), rng, n_rollouts)
 end
 
-function PORollout(sol::Solver; n_rollouts::Int=0)
+function PORollout(sol::Solver; n_rollouts::Int=1)
     return PORollout(sol, Xorshifts.Xoroshiro128Star(), n_rollouts=n_rollouts)
 end
 
