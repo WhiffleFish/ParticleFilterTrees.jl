@@ -110,7 +110,7 @@ struct PORollout{SOL<:Solver, UPD<:Updater, RNG<:AbstractRNG}
     solver::SOL
     updater::UPD
     rng::RNG
-    n_ro::Int # number of rollouts per value estimation. if 0, rollout all particles.
+    n_rollouts::Int # number of rollouts per value estimation. if 0, rollout all particles.
 end
 
 function PORollout(sol::Solver, rng::AbstractRNG; n_rollouts::Int=1)
@@ -125,8 +125,9 @@ struct SolvedPORollout{P<:Policy,U<:Updater,RNG<:AbstractRNG,PMEM<:ParticleColle
     policy::P
     updater::U
     rng::RNG
-    n_ro::Int
+    n_rollouts::Int
     ib::PMEM
+    rb::PMEM
 end
 
 function convert_estimator(est::PFTDPW.PORollout, sol, pomdp::POMDP)
@@ -140,7 +141,8 @@ function convert_estimator(est::PFTDPW.PORollout, sol, pomdp::POMDP)
         policy,
         upd,
         est.rng,
-        est.n_ro,
+        est.n_rollouts,
+        ParticleCollection(Vector{S}(undef,sol.n_particles)),
         ParticleCollection(Vector{S}(undef,sol.n_particles))
     )
 end
@@ -151,36 +153,37 @@ end
 
 function estimate_value(est::PFTDPW.SolvedPORollout, pomdp::POMDP{S}, b::PFTBelief{S}, d::Int) where S
     b_ = initialize_belief!(est.updater, b, est.ib)
-    if est.n_ro < 1
-        return full_rollout(est, pomdp, b, b_, d)
+    if est.n_rollouts < 1
+        return full_rollout(est, pomdp, b_, d)
     else
-        return partial_rollout(est, pomdp, b, b_, d)
+        return partial_rollout(est, pomdp, b_, d)
     end
 end
 
-function full_rollout(est, pomdp, b, b_, d)
+function full_rollout(est::PFTDPW.SolvedPORollout, pomdp::POMDP{S}, b::ParticleCollection{S}, d::Int) where S
     v = 0.0
+    b_ = est.rb
     for (s,w) in weighted_particles(b)
+        b_.particles .= est.ib.particles
         v += w*rollout(est, pomdp, b_, s, d)
     end
     return v
 end
 
-function partial_rollout(est, pomdp, b, b_, d)
+function partial_rollout(est::PFTDPW.SolvedPORollout, pomdp::POMDP{S}, b::ParticleCollection{S}, d::Int) where S
     v = 0.0
-    w = 1/est.n_ro
-    for _ in 1:est.n_ro
+    w = 1/est.n_rollouts
+    b_ = est.rb
+    for _ in 1:est.n_rollouts
+        b_.particles .= est.ib.particles
         s = rand(est.rng, b)
         v += w*rollout(est, pomdp, b_, s, d)
     end
     return v
 end
 
-function rollout(est::PFTDPW.SolvedPORollout, pomdp::POMDP{S}, b0::ParticleCollection{S}, s::S, d::Int) where S
-    # b0 begins pointing to initialbelief of SolvedPORollout
+function rollout(est::PFTDPW.SolvedPORollout, pomdp::POMDP{S}, b::ParticleCollection{S}, s::S, d::Int) where S
     updater = est.updater
-    b = updater.p
-    b.particles .= b0.particles
 
     rng = est.rng
     policy = est.policy
