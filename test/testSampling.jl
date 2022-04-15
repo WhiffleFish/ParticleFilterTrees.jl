@@ -18,9 +18,9 @@ N = 50_000
 samples = [PFTDPW.non_terminal_sample(rng, pomdp, b) for _ in 1:N]
 
 for (s,w) in PFTDPW.weighted_particles(b)
-    c = count(x->x==s, samples)
+    c = count(==(s), samples)
     ratio = c/N
     expected = isterminal(pomdp, s) ? 0.0 : w/b.non_terminal_ws
-    println("s:$s \t experimental:$(round(ratio,sigdigits=4)) \t expected:$(round(expected,sigdigits=4)) ")
-    @assert isapprox(ratio, expected, atol=1e-2)
+    # println("s:$s \t experimental:$(round(ratio,sigdigits=4)) \t expected:$(round(expected,sigdigits=4)) ")
+    @test isapprox(ratio, expected, atol=1e-2)
 end

@@ -1,9 +1,7 @@
-@info "Loading Dependencies..."
 using Pkg
-Pkg.activate(@__DIR__)
-
-include("argparse.jl")
-args = parse_commandline()
+Pkg.add(url = "https://github.com/JuliaPOMDP/LaserTag.jl#master")
+Pkg.add(url = "https://github.com/WhiffleFish/SubHunt.jl#master")
+Pkg.add(url = "https://github.com/zsunberg/VDPTag2.jl#master")
 
 using Test
 using POMDPs, POMDPModelTools, POMDPModels, QuickPOMDPs, POMDPSimulators
@@ -104,21 +102,3 @@ PFTDPW.no_obs_check_search(subhunt_planner, 1, 10)
 
 ## Nonterminal sample test
 include("testSampling.jl")
-
-
-## Performance Testing
-
-if args["perf"]
-    @info "Running Performance Tests..."
-    const PROCS = args["n_procs"]
-    const N_SIMS = args["sims"]
-    const MAX_TIME = args["time"]
-
-    @assert PROCS > 0
-    @assert N_SIMS > 0
-    @assert MAX_TIME > 0
-
-    include("testPerformance.jl")
-end
-
-@info "Testing Complete"
