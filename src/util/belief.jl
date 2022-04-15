@@ -1,4 +1,4 @@
-struct PFTBelief{T}
+struct PFTBelief{T} <: AbstractParticleBelief{T}
     particles::Vector{T}
     weights::Vector{Float64}
     non_terminal_ws::Float64

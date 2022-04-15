@@ -1,9 +1,8 @@
 function GenBelief(
-    planner::PFTDPWPlanner,
-    pomdp::POMDP{S,A,O},
+    planner::AbstractPFTPlanner,
+    pomdp::POMDP{S,A},
     b::PFTBelief{S},
-    a::A
-    )::Tuple{PFTBelief, O, Float64} where {S,A,O}
+    a::A) where {S,A}
 
     rng = planner.sol.rng
     N = n_particles(b)
@@ -27,7 +26,7 @@ function GenBelief(
 end
 
 function GenBelief(
-    planner::PFTDPWPlanner,
+    planner::AbstractPFTPlanner,
     pomdp::POMDP{S,A,O},
     b::PFTBelief{S},
     a::A,

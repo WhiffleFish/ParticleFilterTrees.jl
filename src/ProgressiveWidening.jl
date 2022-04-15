@@ -2,22 +2,22 @@ function next_action(rng::AbstractRNG, pomdp::POMDP)
     return rand(rng, actions(pomdp))
 end
 
-function UCB(Q::Float64, Nh::Int, Nha::Int, c::Float64)::Float64
+function UCB(Q::Float64, Nh::Int, Nha::Int, c::Float64)
     return Nha > 0 ? Q + c*sqrt(log(Nh)/Nha) : Inf
 end
 
-function _unsafeUCB(Q::Float64, Nh::Int, Nha::Int, c::Float64)::Float64
+function _unsafeUCB(Q::Float64, Nh::Int, Nha::Int, c::Float64)
     return Q + c*sqrt(log(Nh)/Nha)
 end
 
-function UCB1action(planner::PFTDPWPlanner, tree::PFTDPWTree{S,A,O}, b_idx::Int, c::Float64) where {S,A,O}
+function UCB1action(planner::AbstractPFTPlanner, tree::PFTDPWTree{S,A,O}, b_idx::Int, c::Float64) where {S,A,O}
 
     max_ucb = -Inf
     opt_a = planner._placeholder_a
     opt_idx = 0
     for (a,ba_idx) in tree.b_children[b_idx]
         Nha = tree.Nha[ba_idx]
-        Nha == 0 && return a::A, ba_idx::Int
+        iszero(Nha) && return a::A, ba_idx::Int
 
         @inbounds ucb = _unsafeUCB(tree.Qha[ba_idx], tree.Nh[b_idx], Nha, c)
         if ucb > max_ucb
@@ -29,7 +29,7 @@ function UCB1action(planner::PFTDPWPlanner, tree::PFTDPWTree{S,A,O}, b_idx::Int,
     return opt_a::A, opt_idx::Int
 end
 
-@inline function act_prog_widen(planner::PFTDPWPlanner, b_idx::Int)
+@inline function act_prog_widen(planner::AbstractPFTPlanner, b_idx::Int)
     if planner.sol.enable_action_pw
         return progressive_widen(planner, b_idx)
     else
@@ -43,7 +43,7 @@ function progressive_widen(planner::PFTDPWPlanner, b_idx::Int)
 
     k_a, alpha_a, c = sol.k_a, sol.alpha_a, sol.c
 
-    if length(tree.b_children[b_idx]) <= k_a*tree.Nh[b_idx]^alpha_a
+    if length(tree.b_children[b_idx]) ≤ k_a*tree.Nh[b_idx]^alpha_a
         a = next_action(sol.rng, planner.pomdp)
         if !any(x[1] == a for x in tree.b_children[b_idx])
             insert_action!(planner, tree, b_idx, a)
@@ -64,4 +64,41 @@ function act_widen(planner::PFTDPWPlanner, b_idx::Int)
     end
 
     return UCB1action(planner, tree, b_idx, sol.c)
+end
+
+function progressive_widen(planner::SparsePFTPlanner, b_idx::Int)
+    sol = planner.sol
+    tree = planner.tree
+
+    k_a, c = sol.k_a, sol.c
+    b_children = tree.b_children[b_idx]
+
+    if isempty(b_children)
+        a = action(planner.solved_action_selector, tree.b[b_idx])
+        insert_action!(planner, tree, b_idx, a)
+    elseif length(b_children) ≤ k_a
+        a = next_action(sol.rng, planner.pomdp)
+        if !any(x[1] == a for x in tree.b_children[b_idx])
+            insert_action!(planner, tree, b_idx, a)
+        end
+    end
+
+    return UCB1action(planner, tree, b_idx, c)
+end
+
+function act_widen(planner::SparsePFTPlanner, b_idx::Int)
+    sol = planner.sol
+    tree = planner.tree
+
+    if isempty(tree.b_children[b_idx])
+        a′ = ParticleFilters.action(planner.solved_action_selector, tree.b[b_idx])
+        ba_idx = 0
+        for a in actions(planner.pomdp)
+            insert_action!(planner, tree, b_idx, a)
+            a == a′ && (ba_idx = length(tree.ba_children))
+        end
+        return a′, ba_idx
+    else
+        return UCB1action(planner, tree, b_idx, sol.c)
+    end
 end

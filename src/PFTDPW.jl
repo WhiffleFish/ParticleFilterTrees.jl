@@ -1,7 +1,6 @@
 module PFTDPW
 
 using POMDPs
-using Parameters # @with_kw
 using Random # Random.GLOBAL_RNG
 using D3Trees # TreeVis
 using POMDPModelTools # action_info
@@ -12,10 +11,8 @@ using BasicPOMCP
 import MCTS: convert_estimator, estimate_value, convert_to_policy
 using PushVectors
 using ParticleFilters
-import ParticleFilters: n_particles, particles, weighted_particles, weight_sum, weight, particle, weights
-using ParticleFilters # action(::AlphaVectorPolicy, b)
 
-export PFTDPWTree, PFTDPWSolver, PFTDPWPlanner
+export PFTDPWTree, PFTDPWSolver, PFTPlanner
 
 export PFTBelief
 
@@ -27,6 +24,9 @@ export FastRandomSolver, FastRandomRolloutEstimator
 include(joinpath("util","FastBootstrapFilter.jl"))
 include(joinpath("util","ValueEstimation.jl"))
 
+
+abstract type AbstractPFTSolver <: Solver end
+abstract type AbstractPFTPlanner <: Policy end
 
 """
 ...
@@ -59,13 +59,46 @@ struct PFTDPWTree{S,A,O}
             PushVector{Float64}(sz),
 
             PushVector{PFTBelief{S}}(sz),
-            NestedPushVector{Tuple{A,Int}}(floor(Int,k_o), sz),
+            NestedPushVector{Tuple{A,Int}}(ceil(Int,k_o), sz),
             PushVector{Float64}(sz),
 
             sizehint!(Dict{Tuple{Int,O},Int}(), check_repeat_obs ? sz : 0),
-            NestedPushVector{Int}(floor(Int,k_a), sz)
+            NestedPushVector{Int}(ceil(Int,k_a), sz)
             )
     end
+end
+
+"""
+...
+- `max_depth::Int = 20` - Maximum tree search depth
+- `n_particles::Int = 100` - Number of particles representing belief
+- `c::Float64 = 1.0` - UCB exploration parameter
+- `k_o::Float64 = 10.0` - Initial observation widening parameter
+- `k_a::Float64 = 5.0` - Initial action widening parameter
+- `tree_queries::Int = 1_000` - Maximum number of tree search iterations
+- `max_time::Float64 = Inf` - Maximum tree search time (in seconds)
+- `rng::RNG = Xorshifts.Xoroshiro128Star()` - Random number generator
+- `action_selector::AS = FastRandomSolver()` - Belief node first action selector
+- `enable_action_pw::Bool = false` - Alias for `alpha_a = 0.0`
+- `check_repeat_obs::Bool = true` - Check that repeat observations do not overwrite beliefs (added dictionary overhead)
+- `beliefcache_size::Int = 100_000` - Number of particle/weight vectors to cache offline
+- `treecache_size::Int = 100_000` - Number of belief/action nodes to preallocate in tree (reduces `Base._growend!` calls)
+...
+"""
+Base.@kwdef struct SparsePFTSolver{RNG<:AbstractRNG, AS} <: AbstractPFTSolver
+    tree_queries::Int      = 1_000
+    max_time::Float64      = Inf # (seconds)
+    max_depth::Int         = 20
+    n_particles::Int       = 100
+    c::Float64             = 1.0
+    k_o::Float64           = 10.0
+    k_a::Float64           = 5.0
+    rng::RNG               = Xorshifts.Xoroshiro128Star()
+    action_selector::AS    = FastRandomSolver()
+    enable_action_pw::Bool = false
+    check_repeat_obs::Bool = true
+    beliefcache_size::Int  = 100_000
+    treecache_size::Int    = 100_000
 end
 
 
@@ -88,7 +121,7 @@ end
 - `treecache_size::Int = 100_000` - Number of belief/action nodes to preallocate in tree (reduces `Base._growend!` calls)
 ...
 """
-@with_kw struct PFTDPWSolver{RNG<:AbstractRNG, VE} <: Solver
+Base.@kwdef struct PFTDPWSolver{RNG<:AbstractRNG, VE} <: AbstractPFTSolver
     tree_queries::Int      = 1_000
     max_time::Float64      = Inf # (seconds)
     max_depth::Int         = 20
@@ -108,11 +141,22 @@ end
 
 include(joinpath("util","cache.jl"))
 
-struct PFTDPWPlanner{M<:POMDP, SOL<:PFTDPWSolver, TREE<:PFTDPWTree, VE, A, S, T} <: Policy
+struct PFTDPWPlanner{SOL<:AbstractPFTSolver, M<:POMDP, TREE<:PFTDPWTree, VE, A, S, T} <: AbstractPFTPlanner
     pomdp::M
     sol::SOL
     tree::TREE
     solved_VE::VE
+
+    _placeholder_a::A
+    obs_req::T
+    cache::BeliefCache{S}
+end
+
+struct SparsePFTPlanner{SOL<:AbstractPFTSolver, M<:POMDP, TREE<:PFTDPWTree, AS, A, S, T} <: AbstractPFTPlanner
+    pomdp::M
+    sol::SOL
+    tree::TREE
+    solved_action_selector::AS
 
     _placeholder_a::A
     obs_req::T

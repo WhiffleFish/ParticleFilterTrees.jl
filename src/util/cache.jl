@@ -5,7 +5,7 @@ mutable struct BeliefCache{S}
     capacity::Int
 end
 
-function BeliefCache{S}(sol::PFTDPWSolver) where S
+function BeliefCache{S}(sol::AbstractPFTSolver) where S
     sz = min(sol.tree_queries, sol.beliefcache_size)
     n_p = sol.n_particles
     return BeliefCache{S}(
@@ -18,7 +18,7 @@ end
 
 function gen_empty_belief(cache::BeliefCache{S}, N::Int) where {S}
     cache.count += 1
-    if cache.count <= cache.capacity
+    if cache.count ≤ cache.capacity
         return cache.particles[cache.count]::Vector{S}, cache.weights[cache.count]::Vector{Float64}
     else
         return Vector{S}(undef, N), Vector{Float64}(undef, N)
