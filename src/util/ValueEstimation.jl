@@ -18,6 +18,21 @@ function is_obs_required(pomdp::POMDP)
     return obs_req
 end
 
+struct RandomSolver{RNG<:AbstractRNG}
+    rng::RNG
+end
+
+RandomSolver() = RandomSolver(Xorshifts.Xoroshiro128Star())
+
+struct RandomPolicy{A,RNG<:AbstractRNG}
+    actions::A
+    rng::RNG
+end
+
+POMDPs.solve(s::RandomSolver, pomdp::POMDP) = RandomPolicy(actions(pomdp), s.rng)
+
+POMDPs.action(s::RandomPolicy, ::Any) = rand(s.rng, s.actions)
+
 struct FastRandomSolver{RNG <: Random.AbstractRNG}
     rng::RNG
 end
@@ -39,7 +54,7 @@ end
 const FRRE = FastRandomRolloutEstimator{false, A, RNG} where {A,RNG}
 const ObsReqFRRE = FastRandomRolloutEstimator{true, A, RNG} where {A,RNG}
 
-action(p::FastRandomRolloutEstimator, ::Any) = rand(p.rng, p.actions)
+POMDPs.action(p::FastRandomRolloutEstimator, ::Any) = rand(p.rng, p.actions)
 
 function convert_estimator(estimator::FastRandomSolver, ::Any, pomdp::POMDP)
 

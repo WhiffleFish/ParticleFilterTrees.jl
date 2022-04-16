@@ -12,8 +12,9 @@ import MCTS: convert_estimator, estimate_value, convert_to_policy
 using PushVectors
 using ParticleFilters
 
-export PFTDPWTree, PFTDPWSolver, PFTPlanner
-
+export PFTDPWTree
+export PFTDPWSolver, PFTDPWPlanner
+export SparsePFTSolver, SparsePFTPlanner
 export PFTBelief
 
 include(joinpath("util","belief.jl"))
@@ -94,7 +95,7 @@ Base.@kwdef struct SparsePFTSolver{RNG<:AbstractRNG, AS} <: AbstractPFTSolver
     k_o::Float64           = 10.0
     k_a::Float64           = 5.0
     rng::RNG               = Xorshifts.Xoroshiro128Star()
-    action_selector::AS    = FastRandomSolver()
+    action_selector::AS    = RandomSolver()
     enable_action_pw::Bool = false
     check_repeat_obs::Bool = true
     beliefcache_size::Int  = 100_000
