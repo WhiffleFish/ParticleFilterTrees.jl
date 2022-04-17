@@ -98,8 +98,8 @@ Base.@kwdef struct SparsePFTSolver{RNG<:AbstractRNG, AS} <: AbstractPFTSolver
     action_selector::AS    = RandomSolver()
     enable_action_pw::Bool = false
     check_repeat_obs::Bool = true
-    beliefcache_size::Int  = 100_000
-    treecache_size::Int    = 100_000
+    beliefcache_size::Int  = 1_000
+    treecache_size::Int    = 1_000
 end
 
 
@@ -136,8 +136,8 @@ Base.@kwdef struct PFTDPWSolver{RNG<:AbstractRNG, VE} <: AbstractPFTSolver
     value_estimator::VE    = FastRandomSolver()
     check_repeat_obs::Bool = true
     enable_action_pw::Bool = false
-    beliefcache_size::Int  = 100_000
-    treecache_size::Int    = 100_000
+    beliefcache_size::Int  = 1_000
+    treecache_size::Int    = 1_000
 end
 
 include(joinpath("util","cache.jl"))
