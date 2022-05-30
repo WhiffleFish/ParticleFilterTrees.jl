@@ -1,5 +1,5 @@
 function GenBelief(
-    planner::AbstractPFTPlanner,
+    planner::PFTDPWPlanner,
     pomdp::POMDP{S,A},
     b::PFTBelief{S},
     a::A) where {S,A}
@@ -26,7 +26,7 @@ function GenBelief(
 end
 
 function GenBelief(
-    planner::AbstractPFTPlanner,
+    planner::PFTDPWPlanner,
     pomdp::POMDP{S,A,O},
     b::PFTBelief{S},
     a::A,

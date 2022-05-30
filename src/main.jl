@@ -28,38 +28,8 @@ function POMDPs.solve(sol::PFTDPWSolver, pomdp::POMDP{S,A,O}) where {S,A,O}
     )
 end
 
-""" WIP → FIX"""
-function POMDPs.solve(sol::SparsePFTSolver, pomdp::POMDP{S,A,O}) where {S,A,O}
-    act = actions(pomdp)
-    a = rand(act)
 
-    solved_action_selector = solve(sol.action_selector, pomdp)
-    obs_req = is_obs_required(pomdp)
-    if !sol.enable_action_pw
-        try
-            SA = length(act)
-            @assert SA < Inf
-        catch e
-            error("Action space should have some defined length if enable_action_pw=false")
-        end
-    else
-        SA = -1
-    end
-
-    cache = BeliefCache{S}(sol)
-    sz = min(sol.tree_queries, sol.treecache_size)
-    return SparsePFTPlanner(
-        pomdp,
-        sol,
-        PFTDPWTree{S,A,O}(sz, sol.check_repeat_obs, sol.k_o, sol.k_a),
-        solved_action_selector,
-        a,
-        Val(obs_req),
-        cache
-    )
-end
-
-function POMDPModelTools.action_info(planner::AbstractPFTPlanner, b)
+function POMDPModelTools.action_info(planner::PFTDPWPlanner, b)
     t0 = time()
 
     sol = planner.sol
@@ -99,7 +69,7 @@ function POMDPModelTools.action_info(planner::AbstractPFTPlanner, b)
         )
 end
 
-function POMDPs.action(planner::AbstractPFTPlanner, b)
+function POMDPs.action(planner::PFTDPWPlanner, b)
     return first(action_info(planner, b))
 end
 

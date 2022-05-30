@@ -18,8 +18,6 @@ include(joinpath(@__DIR__,"LightDarkPOMDP.jl"))
 
 include("PFTDPW.jl")
 
-include("SparsePFT.jl")
-
 include("subhunt_terminal.jl")
 
 include("sampling.jl")

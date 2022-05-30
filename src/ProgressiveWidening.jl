@@ -10,7 +10,7 @@ function _unsafeUCB(Q::Float64, Nh::Int, Nha::Int, c::Float64)
     return Q + c*sqrt(log(Nh)/Nha)
 end
 
-function UCB1action(planner::AbstractPFTPlanner, tree::PFTDPWTree{S,A,O}, b_idx::Int, c::Float64) where {S,A,O}
+function UCB1action(planner::PFTDPWPlanner, tree::PFTDPWTree{S,A,O}, b_idx::Int, c::Float64) where {S,A,O}
 
     max_ucb = -Inf
     opt_a = planner._placeholder_a
@@ -29,7 +29,7 @@ function UCB1action(planner::AbstractPFTPlanner, tree::PFTDPWTree{S,A,O}, b_idx:
     return opt_a::A, opt_idx::Int
 end
 
-@inline function act_prog_widen(planner::AbstractPFTPlanner, b_idx::Int)
+@inline function act_prog_widen(planner::PFTDPWPlanner, b_idx::Int)
     if planner.sol.enable_action_pw
         return progressive_widen(planner, b_idx)
     else
@@ -64,41 +64,4 @@ function act_widen(planner::PFTDPWPlanner, b_idx::Int)
     end
 
     return UCB1action(planner, tree, b_idx, sol.c)
-end
-
-function progressive_widen(planner::SparsePFTPlanner, b_idx::Int)
-    sol = planner.sol
-    tree = planner.tree
-
-    k_a, c = sol.k_a, sol.c
-    b_children = tree.b_children[b_idx]
-
-    if isempty(b_children)
-        a = action(planner.solved_action_selector, tree.b[b_idx])
-        insert_action!(planner, tree, b_idx, a)
-    elseif length(b_children) ≤ k_a
-        a = next_action(sol.rng, planner.pomdp)
-        if !any(x[1] == a for x in tree.b_children[b_idx])
-            insert_action!(planner, tree, b_idx, a)
-        end
-    end
-
-    return UCB1action(planner, tree, b_idx, c)
-end
-
-function act_widen(planner::SparsePFTPlanner, b_idx::Int)
-    sol = planner.sol
-    tree = planner.tree
-
-    if isempty(tree.b_children[b_idx])
-        a′ = ParticleFilters.action(planner.solved_action_selector, tree.b[b_idx])
-        ba_idx = 0
-        for a in actions(planner.pomdp)
-            insert_action!(planner, tree, b_idx, a)
-            a == a′ && (ba_idx = length(tree.ba_children))
-        end
-        return a′, ba_idx
-    else
-        return UCB1action(planner, tree, b_idx, sol.c)
-    end
 end

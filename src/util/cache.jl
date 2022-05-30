@@ -5,7 +5,7 @@ mutable struct BeliefCache{S}
     capacity::Int
 end
 
-function BeliefCache{S}(sol::AbstractPFTSolver) where S
+function BeliefCache{S}(sol::PFTDPWSolver) where S
     sz = min(sol.tree_queries, sol.beliefcache_size)
     n_p = sol.n_particles
     return BeliefCache{S}(

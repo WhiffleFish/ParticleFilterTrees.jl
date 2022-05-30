@@ -81,7 +81,7 @@ function sr_gen(::Val{true}, rng::AbstractRNG, pomdp::POMDP{S,A,O}, s::S, a::A) 
     return @gen(:sp,:r)(pomdp, s, a, rng)
 end
 
-function estimate_value(estimator::FastRandomRolloutEstimator, pomdp::POMDP{S,A,O}, s::S, depth::Int) where {S,A,O}
+function MCTS.estimate_value(estimator::FastRandomRolloutEstimator, pomdp::POMDP{S,A,O}, s::S, depth::Int) where {S,A,O}
 
     disc = 1.0
     r_total = 0.0
@@ -106,10 +106,10 @@ function estimate_value(estimator::FastRandomRolloutEstimator, pomdp::POMDP{S,A,
 end
 
 # Fallback for non-belief defined value estimators
-function estimate_value(est, pomdp::POMDP{S}, b::PFTBelief{S}, d::Int) where S
+function MCTS.estimate_value(est, pomdp::POMDP{S}, b::PFTBelief{S}, d::Int) where S
     v = 0.0
     for (s,w) in weighted_particles(b)
-        v += w*estimate_value(est, pomdp, s, d) # estim def in terms of state
+        v += w*MCTS.estimate_value(est, pomdp, s, d) # estim def in terms of state
     end
     return v
 end
@@ -162,11 +162,11 @@ function convert_estimator(est::PFTDPW.PORollout, sol, pomdp::POMDP)
     )
 end
 
-function estimate_value(est::BasicPOMCP.SolvedFOValue, pomdp::POMDP{S}, s::S, d::Int) where S
+function MCTS.estimate_value(est::BasicPOMCP.SolvedFOValue, pomdp::POMDP{S}, s::S, d::Int) where S
     POMDPs.value(est.policy, s)
 end
 
-function estimate_value(est::PFTDPW.SolvedPORollout, pomdp::POMDP{S}, b::PFTBelief{S}, d::Int) where S
+function MCTS.estimate_value(est::PFTDPW.SolvedPORollout, pomdp::POMDP{S}, b::PFTBelief{S}, d::Int) where S
     b_ = initialize_belief!(est.updater, b, est.ib)
     if est.n_rollouts < 1
         return full_rollout(est, pomdp, b_, d)
