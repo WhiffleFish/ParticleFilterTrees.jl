@@ -84,7 +84,7 @@ function D3Trees.D3Tree(tree::PFTDPWTree{S,A,O}; show_obs::Bool=true) where {S,A
         text[ba_idx + n_b] = """
             N = $N
             a = $a
-            Q = $Q"""
+            Q̂ = $Q"""
 
         children[ba_idx + n_b] = unique(tree.ba_children[ba_idx])
         tooltip[ba_idx + n_b] = "ba_idx = $ba_idx"

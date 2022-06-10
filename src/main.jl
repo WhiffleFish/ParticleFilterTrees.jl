@@ -1,8 +1,7 @@
 function POMDPs.solve(sol::PFTDPWSolver, pomdp::POMDP{S,A,O}) where {S,A,O}
     act = actions(pomdp)
-    a = rand(act)
 
-    solved_ve = convert_estimator(sol.value_estimator, sol, pomdp)
+    solved_ve = MCTS.convert_estimator(sol.value_estimator, sol, pomdp)
     obs_req = is_obs_required(pomdp)
     if !sol.enable_action_pw
         try
@@ -22,7 +21,6 @@ function POMDPs.solve(sol::PFTDPWSolver, pomdp::POMDP{S,A,O}) where {S,A,O}
         sol,
         PFTDPWTree{S,A,O}(sz, sol.check_repeat_obs, sol.k_o, sol.k_a),
         solved_ve,
-        a,
         Val(obs_req),
         cache
     )

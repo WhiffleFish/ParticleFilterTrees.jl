@@ -5,7 +5,7 @@ using POMDPModelTools
 const R = 60
 const LIGHT_LOC = 10
 
-const LightDark = QuickPOMDP(
+LightDarkPOMDP() = QuickPOMDP(
     states = -R:R+1, # r+1 is a terminal state
     stateindex = s -> s + R + 1,
     actions = (-10, -1, 0, 1, 10),

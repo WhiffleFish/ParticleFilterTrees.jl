@@ -14,7 +14,7 @@ using SubHunt
 using LaserTag
 using VDPTag2
 
-include(joinpath(@__DIR__,"LightDarkPOMDP.jl"))
+include("LightDarkPOMDP.jl")
 
 include("PFTDPW.jl")
 

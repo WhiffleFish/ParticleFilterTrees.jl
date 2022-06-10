@@ -9,7 +9,6 @@ using RandomNumbers: Xorshifts # Fast RNG
 using Colors # TreeVis
 using BasicPOMCP
 using MCTS
-import MCTS: convert_estimator, convert_to_policy
 using PushVectors
 using ParticleFilters
 
@@ -106,13 +105,11 @@ end
 
 include(joinpath("util","cache.jl"))
 
-struct PFTDPWPlanner{SOL<:PFTDPWSolver, M<:POMDP, TREE<:PFTDPWTree, VE, A, S, T} <: Policy
+struct PFTDPWPlanner{SOL<:PFTDPWSolver, M<:POMDP, TREE<:PFTDPWTree, VE, S, T} <: Policy
     pomdp::M
     sol::SOL
     tree::TREE
     solved_VE::VE
-
-    _placeholder_a::A
     obs_req::T
     cache::BeliefCache{S}
 end

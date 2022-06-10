@@ -56,7 +56,7 @@ const ObsReqFRRE = FastRandomRolloutEstimator{true, A, RNG} where {A,RNG}
 
 POMDPs.action(p::FastRandomRolloutEstimator, ::Any) = rand(p.rng, p.actions)
 
-function convert_estimator(estimator::FastRandomSolver, ::Any, pomdp::POMDP)
+function MCTS.convert_estimator(estimator::FastRandomSolver, ::Any, pomdp::POMDP)
 
     obs_req = is_obs_required(pomdp)
 
@@ -145,13 +145,13 @@ struct SolvedPORollout{P<:Policy,U<:Updater,RNG<:AbstractRNG,PMEM<:ParticleColle
     rb::PMEM
 end
 
-function convert_estimator(est::PFTDPW.PORollout, sol, pomdp::POMDP)
+function MCTS.convert_estimator(est::PFTDPW.PORollout, sol, pomdp::POMDP)
     upd = est.updater
     if upd isa PlaceHolderUpdater
         upd = PFTFilter(pomdp, sol.n_particles)
     end
     S = statetype(pomdp)
-    policy = convert_to_policy(est.solver, pomdp)
+    policy = MCTS.convert_to_policy(est.solver, pomdp)
     PFTDPW.SolvedPORollout(
         policy,
         upd,

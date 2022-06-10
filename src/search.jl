@@ -30,9 +30,7 @@ end
 
 
 function obs_check_search(planner::PFTDPWPlanner, b_idx::Int, d::Int)
-    tree = planner.tree
-    pomdp = planner.pomdp
-    sol = planner.sol
+    (;tree, pomdp, sol) = planner
 
     if iszero(d) || tree.b[b_idx].non_terminal_ws < eps()
         return 0.0

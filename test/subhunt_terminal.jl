@@ -26,6 +26,12 @@ const Pos = SVector{2, Int}
     push!(subhunt_planner.tree.Nh, 0)
     push!(subhunt_planner.tree.b_rewards, 0.0)
 
-    @test PFTDPW.no_obs_check_search(subhunt_planner, 1, 10) isa Float64
+    @test try
+        PFTDPW.no_obs_check_search(subhunt_planner, 1, 10)
+        true
+    catch e
+        println(e)
+        false
+    end
     # ^ would fail to run if isterminalbelief did not take weights into account
 end
