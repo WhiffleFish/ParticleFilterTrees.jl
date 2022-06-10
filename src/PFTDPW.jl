@@ -5,7 +5,6 @@ using Random
 using D3Trees
 using POMDPModelTools # action_info
 using LinearAlgebra # normalize!
-using RandomNumbers: Xorshifts # Fast RNG
 using Colors # TreeVis
 using BasicPOMCP
 using MCTS
@@ -77,7 +76,7 @@ end
 - `alpha_a::Float64 = 0.0` - Action progressive widening parameter
 - `tree_queries::Int = 1_000` - Maximum number of tree search iterations
 - `max_time::Float64 = Inf` - Maximum tree search time (in seconds)
-- `rng::RNG = Xorshifts.Xoroshiro128Star()` - Random number generator
+- `rng::RNG = Random.default_rng()` - Random number generator
 - `value_estimator::VE = FastRandomSolver()` - Belief node value estimator
 - `check_repeat_obs::Bool = true` - Check that repeat observations do not overwrite beliefs (added dictionary overhead)
 - `enable_action_pw::Bool = false` - Alias for `alpha_a = 0.0`
@@ -95,7 +94,7 @@ Base.@kwdef struct PFTDPWSolver{RNG<:AbstractRNG, VE} <: Solver
     alpha_o::Float64       = 0.0 # Observation Progressive widening parameter
     k_a::Float64           = 5.0
     alpha_a::Float64       = 0.0 # Action Progressive widening parameter
-    rng::RNG               = Xorshifts.Xoroshiro128Star()
+    rng::RNG               = Random.default_rng()
     value_estimator::VE    = FastRandomSolver()
     check_repeat_obs::Bool = true
     enable_action_pw::Bool = false

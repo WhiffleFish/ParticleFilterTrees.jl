@@ -15,7 +15,7 @@ function PFTFilter(pomdp::POMDP, n_p::Int, rng::AbstractRNG)
         )
 end
 
-PFTFilter(pomdp::POMDP, n_p::Int) = PFTFilter(pomdp, n_p, Xorshifts.Xoroshiro128Star())
+PFTFilter(pomdp::POMDP, n_p::Int) = PFTFilter(pomdp, n_p, Random.default_rng())
 
 function initialize_belief!(pf::PFTFilter, source::PFTBelief, dest::ParticleCollection)
     resample!(source, dest, pf.rng)

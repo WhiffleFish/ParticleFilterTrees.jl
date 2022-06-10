@@ -22,7 +22,7 @@ struct RandomSolver{RNG<:AbstractRNG}
     rng::RNG
 end
 
-RandomSolver() = RandomSolver(Xorshifts.Xoroshiro128Star())
+RandomSolver() = RandomSolver(Random.default_rng())
 
 struct RandomPolicy{A,RNG<:AbstractRNG}
     actions::A
@@ -37,7 +37,7 @@ struct FastRandomSolver{RNG <: Random.AbstractRNG}
     rng::RNG
 end
 
-FastRandomSolver() = FastRandomSolver(Xorshifts.Xoroshiro128Star())
+FastRandomSolver() = FastRandomSolver(Random.default_rng())
 
 struct FastRandomRolloutEstimator{ObsRequired, A, RNG <:AbstractRNG}
     actions::A
@@ -133,7 +133,7 @@ function PORollout(sol::Solver, rng::AbstractRNG; n_rollouts::Int=1)
 end
 
 function PORollout(sol::Solver; n_rollouts::Int=1)
-    return PORollout(sol, Xorshifts.Xoroshiro128Star(), n_rollouts=n_rollouts)
+    return PORollout(sol, Random.default_rng(), n_rollouts=n_rollouts)
 end
 
 struct SolvedPORollout{P<:Policy,U<:Updater,RNG<:AbstractRNG,PMEM<:ParticleCollection}
