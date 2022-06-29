@@ -1,4 +1,4 @@
-module PFTDPW
+module SparseParticleTrees
 
 using POMDPs
 using Random

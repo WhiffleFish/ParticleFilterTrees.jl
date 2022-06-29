@@ -19,15 +19,15 @@ const Pos = SVector{2, Int}
     p[2] = rand(initialstate(subhunt))
     w = fill(1/10,10)
     w[2] = 0.0
-    test_b = PFTDPW.PFTBelief{SubState}(p, w, 0.0)
+    test_b = SparseParticleTrees.PFTBelief{SubState}(p, w, 0.0)
 
     push!(subhunt_planner.tree.b, test_b)
-    PFTDPW.freenext!(subhunt_planner.tree.b_children)
+    SparseParticleTrees.freenext!(subhunt_planner.tree.b_children)
     push!(subhunt_planner.tree.Nh, 0)
     push!(subhunt_planner.tree.b_rewards, 0.0)
 
     @test try
-        PFTDPW.no_obs_check_search(subhunt_planner, 1, 10)
+        SparseParticleTrees.no_obs_check_search(subhunt_planner, 1, 10)
         true
     catch e
         println(e)

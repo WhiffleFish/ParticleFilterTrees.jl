@@ -1,4 +1,4 @@
-# PFTDPW
+# SparseParticleTrees.jl
 
 ## Particle Filter Trees with Double Progressive Widening
 
@@ -27,7 +27,7 @@
 
 ```julia
 using POMDPs, POMDPModels
-using PFTDPW
+using SparseParticleTrees
 
 pomdp = LightDark1D()
 b0 = initialstate(pomdp)

@@ -1,5 +1,5 @@
 using Pkg
-Pkg.add(url = "https://github.com/JuliaPOMDP/LaserTag.jl#master")
+# Pkg.add(url = "https://github.com/JuliaPOMDP/LaserTag.jl#master")
 Pkg.add(url = "https://github.com/WhiffleFish/SubHunt.jl#master")
 Pkg.add(url = "https://github.com/zsunberg/VDPTag2.jl#master")
 
@@ -9,9 +9,9 @@ using QMDP
 using Random
 using StaticArrays
 using ParticleFilters
-using PFTDPW
+using SparseParticleTrees
 using SubHunt
-using LaserTag
+# using LaserTag
 using VDPTag2
 
 include("LightDarkPOMDP.jl")
