@@ -1,6 +1,6 @@
 @testset "PFTDPW" begin
     ro = RolloutSimulator(max_steps=50)
-    PO_VE = SparseParticleTrees.PORollout(QMDPSolver(); n_rollouts=1)
+    PO_VE = ParticleFilterTrees.PORollout(QMDPSolver(); n_rollouts=1)
 
     pomdp = TigerPOMDP()
     sol = PFTDPWSolver(max_time=0.1, max_depth=20, enable_action_pw=false, check_repeat_obs=true)

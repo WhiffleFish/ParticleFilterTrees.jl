@@ -1,4 +1,4 @@
-module SparseParticleTrees
+module ParticleFilterTrees
 
 using POMDPs
 using Random

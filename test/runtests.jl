@@ -9,7 +9,7 @@ using QMDP
 using Random
 using StaticArrays
 using ParticleFilters
-using SparseParticleTrees
+using ParticleFilterTrees
 using SubHunt
 # using LaserTag
 using VDPTag2

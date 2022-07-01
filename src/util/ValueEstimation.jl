@@ -145,14 +145,14 @@ struct SolvedPORollout{P<:Policy,U<:Updater,RNG<:AbstractRNG,PMEM<:ParticleColle
     rb::PMEM
 end
 
-function MCTS.convert_estimator(est::SparseParticleTrees.PORollout, sol, pomdp::POMDP)
+function MCTS.convert_estimator(est::ParticleFilterTrees.PORollout, sol, pomdp::POMDP)
     upd = est.updater
     if upd isa PlaceHolderUpdater
         upd = PFTFilter(pomdp, sol.n_particles)
     end
     S = statetype(pomdp)
     policy = MCTS.convert_to_policy(est.solver, pomdp)
-    SparseParticleTrees.SolvedPORollout(
+    ParticleFilterTrees.SolvedPORollout(
         policy,
         upd,
         est.rng,
@@ -166,7 +166,7 @@ function MCTS.estimate_value(est::BasicPOMCP.SolvedFOValue, pomdp::POMDP{S}, s::
     POMDPs.value(est.policy, s)
 end
 
-function MCTS.estimate_value(est::SparseParticleTrees.SolvedPORollout, pomdp::POMDP{S}, b::PFTBelief{S}, d::Int) where S
+function MCTS.estimate_value(est::ParticleFilterTrees.SolvedPORollout, pomdp::POMDP{S}, b::PFTBelief{S}, d::Int) where S
     b_ = initialize_belief!(est.updater, b, est.ib)
     if est.n_rollouts < 1
         return full_rollout(est, pomdp, b_, d)
@@ -175,7 +175,7 @@ function MCTS.estimate_value(est::SparseParticleTrees.SolvedPORollout, pomdp::PO
     end
 end
 
-function full_rollout(est::SparseParticleTrees.SolvedPORollout, pomdp::POMDP{S}, b::ParticleCollection{S}, d::Int) where S
+function full_rollout(est::ParticleFilterTrees.SolvedPORollout, pomdp::POMDP{S}, b::ParticleCollection{S}, d::Int) where S
     v = 0.0
     b_ = est.rb
     for (s,w) in weighted_particles(b)
@@ -185,7 +185,7 @@ function full_rollout(est::SparseParticleTrees.SolvedPORollout, pomdp::POMDP{S},
     return v
 end
 
-function partial_rollout(est::SparseParticleTrees.SolvedPORollout, pomdp::POMDP{S}, b::ParticleCollection{S}, d::Int) where S
+function partial_rollout(est::ParticleFilterTrees.SolvedPORollout, pomdp::POMDP{S}, b::ParticleCollection{S}, d::Int) where S
     v = 0.0
     w = 1/est.n_rollouts
     b_ = est.rb
@@ -197,7 +197,7 @@ function partial_rollout(est::SparseParticleTrees.SolvedPORollout, pomdp::POMDP{
     return v
 end
 
-function rollout(est::SparseParticleTrees.SolvedPORollout, pomdp::POMDP{S}, b::ParticleCollection{S}, s::S, d::Int) where S
+function rollout(est::ParticleFilterTrees.SolvedPORollout, pomdp::POMDP{S}, b::ParticleCollection{S}, s::S, d::Int) where S
     updater = est.updater
 
     rng = est.rng
