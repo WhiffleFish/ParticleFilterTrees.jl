@@ -35,20 +35,22 @@ POMDPs.action(s::RandomPolicy, ::Any) = rand(s.rng, s.actions)
 
 struct FastRandomSolver{RNG <: Random.AbstractRNG}
     rng::RNG
+    d::Union{Nothing, Int}
 end
 
-FastRandomSolver() = FastRandomSolver(Random.default_rng())
+FastRandomSolver(d=10) = FastRandomSolver(Random.default_rng(), d)
 
 struct FastRandomRolloutEstimator{ObsRequired, A, RNG <:AbstractRNG}
     actions::A
     rng::RNG
+    d::Union{Nothing,Int}
 end
 
 function FastRandomRolloutEstimator(pomdp::POMDP, estim::FastRandomSolver, obs_req::Bool)
     RNG = typeof(estim.rng)
     act = actions(pomdp)
     A = typeof(act)
-    return FastRandomRolloutEstimator{obs_req,A,RNG}(act, estim.rng)
+    return FastRandomRolloutEstimator{obs_req,A,RNG}(act, estim.rng, estim.d)
 end
 
 const FRRE = FastRandomRolloutEstimator{false, A, RNG} where {A,RNG}
@@ -84,11 +86,12 @@ end
 function MCTS.estimate_value(estimator::FastRandomRolloutEstimator, pomdp::POMDP{S,A,O}, s::S, depth::Int) where {S,A,O}
 
     disc = 1.0
+    max_depth = isnothing(estimator.d) ? depth : estimator.d
     r_total = 0.0
     rng = estimator.rng
     step = 1
 
-    while !isterminal(pomdp, s) && step <= depth
+    while !isterminal(pomdp, s) && step ≤ max_depth
 
         a = action(estimator, s)
 
@@ -126,14 +129,11 @@ struct PORollout{SOL<:Solver, UPD<:Updater, RNG<:AbstractRNG}
     updater::UPD
     rng::RNG
     n_rollouts::Int # number of rollouts per value estimation. if 0, rollout all particles.
+    d::Union{Nothing, Int}
 end
 
-function PORollout(sol::Solver, rng::AbstractRNG; n_rollouts::Int=1)
-    return PORollout(sol, PlaceHolderUpdater(), rng, n_rollouts)
-end
-
-function PORollout(sol::Solver; n_rollouts::Int=1)
-    return PORollout(sol, Random.default_rng(), n_rollouts=n_rollouts)
+function PORollout(sol::Solver, d=10; n_rollouts::Int=1, rng::AbstractRNG=Random.default_rng())
+    return PORollout(sol, PlaceHolderUpdater(), rng, n_rollouts, d)
 end
 
 struct SolvedPORollout{P<:Policy,U<:Updater,RNG<:AbstractRNG,PMEM<:ParticleCollection}
@@ -143,6 +143,7 @@ struct SolvedPORollout{P<:Policy,U<:Updater,RNG<:AbstractRNG,PMEM<:ParticleColle
     n_rollouts::Int
     ib::PMEM
     rb::PMEM
+    d::Union{Nothing, Int}
 end
 
 function MCTS.convert_estimator(est::PFTDPW.PORollout, sol, pomdp::POMDP)
@@ -158,7 +159,8 @@ function MCTS.convert_estimator(est::PFTDPW.PORollout, sol, pomdp::POMDP)
         est.rng,
         est.n_rollouts,
         ParticleCollection(Vector{S}(undef,sol.n_particles)),
-        ParticleCollection(Vector{S}(undef,sol.n_particles))
+        ParticleCollection(Vector{S}(undef,sol.n_particles)),
+        est.d
     )
 end
 
@@ -199,7 +201,7 @@ end
 
 function rollout(est::PFTDPW.SolvedPORollout, pomdp::POMDP{S}, b::ParticleCollection{S}, s::S, d::Int) where S
     updater = est.updater
-
+    max_depth = isnothing(est.d) ? d : est.d
     rng = est.rng
     policy = est.policy
 
@@ -207,7 +209,7 @@ function rollout(est::PFTDPW.SolvedPORollout, pomdp::POMDP{S}, b::ParticleCollec
     r_total = 0.0
     step = 1
 
-    while !isterminal(pomdp, s) && step <= d
+    while !isterminal(pomdp, s) && step ≤ max_depth
 
         a = ParticleFilters.action(policy, b)
 

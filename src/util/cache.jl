@@ -1,6 +1,7 @@
 mutable struct BeliefCache{S}
     particles::Vector{Vector{S}}
     weights::Vector{Vector{Float64}}
+    resample::Vector{S}
     count::Int
     capacity::Int
 end
@@ -11,6 +12,7 @@ function BeliefCache{S}(sol::PFTDPWSolver) where S
     return BeliefCache{S}(
         [Vector{S}(undef, n_p) for _ in  1:sz],
         [Vector{Float64}(undef, n_p) for _ in 1:sz],
+        Vector{S}(undef, n_p),
         0,
         sz
     )

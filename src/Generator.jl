@@ -71,6 +71,7 @@ function GenBelief(
     end
 
     bp = PFTBelief(bp_particles, bp_weights, pomdp)
+    planner.sol.resample && resample!(planner, bp)
 
     return bp::PFTBelief{S}, o::O, weighted_return::Float64
 end

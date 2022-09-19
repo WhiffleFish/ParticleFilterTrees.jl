@@ -79,30 +79,35 @@ end
 - `rng::RNG = Random.default_rng()` - Random number generator
 - `value_estimator::VE = FastRandomSolver()` - Belief node value estimator
 - `check_repeat_obs::Bool = true` - Check that repeat observations do not overwrite beliefs (added dictionary overhead)
+- `resample::Bool = false` - resample beliefs at each update
 - `enable_action_pw::Bool = false` - Alias for `alpha_a = 0.0`
+- `vanilla::Bool = false` - if vanilla, only perform value estimation at max depth
 - `beliefcache_size::Int = 1_000` - Number of particle/weight vectors to cache offline
 - `treecache_size::Int = 1_000` - Number of belief/action nodes to preallocate in tree (reduces `Base._growend!` calls)
 ...
 """
 Base.@kwdef struct PFTDPWSolver{RNG<:AbstractRNG, VE} <: Solver
-    tree_queries::Int      = 1_000
-    max_time::Float64      = Inf # (seconds)
-    max_depth::Int         = 20
-    n_particles::Int       = 100
-    c::Float64             = 1.0
-    k_o::Float64           = 10.0
-    alpha_o::Float64       = 0.0 # Observation Progressive widening parameter
-    k_a::Float64           = 5.0
-    alpha_a::Float64       = 0.0 # Action Progressive widening parameter
-    rng::RNG               = Random.default_rng()
-    value_estimator::VE    = FastRandomSolver()
-    check_repeat_obs::Bool = true
-    enable_action_pw::Bool = false
-    beliefcache_size::Int  = 1_000
-    treecache_size::Int    = 1_000
+    tree_queries::Int       = 1_000
+    max_time::Float64       = Inf # (seconds)
+    max_depth::Int          = 20
+    n_particles::Int        = 100
+    c::Float64              = 1.0
+    k_o::Float64            = 10.0
+    alpha_o::Float64        = 0.0 # Observation Progressive widening parameter
+    k_a::Float64            = 5.0
+    alpha_a::Float64        = 0.0 # Action Progressive widening parameter
+    rng::RNG                = Random.default_rng()
+    value_estimator::VE     = FastRandomSolver()
+    check_repeat_obs::Bool  = true
+    resample::Bool          = false
+    enable_action_pw::Bool  = false
+    vanilla::Bool           = false
+    beliefcache_size::Int   = 1_000
+    treecache_size::Int     = 1_000
 end
 
 include(joinpath("util","cache.jl"))
+
 
 struct PFTDPWPlanner{SOL<:PFTDPWSolver, M<:POMDP, TREE<:PFTDPWTree, VE, S, T} <: Policy
     pomdp::M
@@ -113,7 +118,7 @@ struct PFTDPWPlanner{SOL<:PFTDPWSolver, M<:POMDP, TREE<:PFTDPWTree, VE, S, T} <:
     cache::BeliefCache{S}
 end
 
-
+include(joinpath("util","resample.jl"))
 include("ProgressiveWidening.jl")
 include("Generator.jl")
 include("TreeConstruction.jl")

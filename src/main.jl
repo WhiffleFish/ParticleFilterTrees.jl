@@ -26,6 +26,21 @@ function POMDPs.solve(sol::PFTDPWSolver, pomdp::POMDP{S,A,O}) where {S,A,O}
     )
 end
 
+@inline function search_method(sol::PFTDPWSolver)
+    return if sol.check_repeat_obs
+        if sol.vanilla
+            vanilla_obs_check_search
+        else
+            obs_check_search
+        end
+    else
+        if sol.vanilla
+            vanilla_no_obs_check_search
+        else
+            no_obs_check_search
+        end
+    end
+end
 
 function POMDPModelTools.action_info(planner::PFTDPWPlanner, b)
     t0 = time()
@@ -43,16 +58,11 @@ function POMDPModelTools.action_info(planner::PFTDPWPlanner, b)
     insert_root!(planner, b)
 
     iter = 0
-    if planner.sol.check_repeat_obs
-        while (time()-t0 < max_time) && (iter < max_iter)
-            obs_check_search(planner, 1, max_depth)
-            iter += 1
-        end
-    else
-        while (time()-t0 < max_time) && (iter < max_iter)
-            no_obs_check_search(planner, 1, max_depth)
-            iter += 1
-        end
+    search = search_method(sol)
+
+    while (time()-t0 < max_time) && (iter < max_iter)
+        search(planner, 1, max_depth)
+        iter += 1
     end
 
     a, a_idx = UCB1action(planner, planner.tree, 1, 0.0)
