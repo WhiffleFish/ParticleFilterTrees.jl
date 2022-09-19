@@ -42,7 +42,7 @@ end
     end
 end
 
-function POMDPModelTools.action_info(planner::PFTDPWPlanner, b)
+function POMDPTools.action_info(planner::PFTDPWPlanner, b)
     t0 = time()
 
     sol = planner.sol

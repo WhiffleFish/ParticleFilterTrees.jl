@@ -3,7 +3,7 @@ module ParticleFilterTrees
 using POMDPs
 using Random
 using D3Trees
-using POMDPModelTools # action_info
+using POMDPTools # action_info
 using LinearAlgebra # normalize!
 using Colors # TreeVis
 using BasicPOMCP
