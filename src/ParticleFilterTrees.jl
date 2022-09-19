@@ -1,4 +1,4 @@
-module PFTDPW
+module ParticleFilterTrees
 
 using POMDPs
 using Random
