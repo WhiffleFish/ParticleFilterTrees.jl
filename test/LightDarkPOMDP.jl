@@ -1,6 +1,6 @@
 using QuickPOMDPs
 using Distributions
-using POMDPModelTools
+using POMDPTools
 
 const R = 60
 const LIGHT_LOC = 10
@@ -24,12 +24,12 @@ LightDarkPOMDP() = QuickPOMDP(
     observation = (s, a, sp) -> Normal(sp, abs(sp - LIGHT_LOC::Int) + 1e-3),
 
     reward = function (s, a)
-        if a == 0
-            return s == 0 ? 100.0 : -100.0
+        if iszero(a)
+            return iszero(s) ? 100.0 : -100.0
         else
             return -1.0
         end
     end,
 
-    initialstate = POMDPModelTools.Uniform(div(-R::Int,2):div(R::Int,2))
+    initialstate = POMDPTools.Uniform(div(-R::Int,2):div(R::Int,2))
 )

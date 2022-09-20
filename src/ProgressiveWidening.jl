@@ -12,7 +12,7 @@ end
 
 function progressive_widen(planner::PFTDPWPlanner, b_idx::Int)
     (;tree, sol) = planner
-    (;k_a, alpha_a, c) = sol
+    (;k_a, alpha_a) = sol
 
     if length(tree.b_children[b_idx]) ≤ k_a*tree.Nh[b_idx]^alpha_a
         a = next_action(sol.rng, planner.pomdp)

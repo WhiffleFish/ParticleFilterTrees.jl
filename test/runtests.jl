@@ -4,7 +4,8 @@ Pkg.add(url = "https://github.com/WhiffleFish/SubHunt.jl#master")
 Pkg.add(url = "https://github.com/WhiffleFish/VDPTag2.jl#master")
 
 using Test
-using POMDPs, POMDPModelTools, POMDPModels, QuickPOMDPs, POMDPSimulators
+using POMDPTools
+using POMDPs, POMDPModels, QuickPOMDPs
 using QMDP
 using Random
 using StaticArrays

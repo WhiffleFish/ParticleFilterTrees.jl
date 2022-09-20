@@ -26,7 +26,7 @@ function POMDPs.solve(sol::PFTDPWSolver, pomdp::POMDP{S,A,O}) where {S,A,O}
     )
 end
 
-@inline function search_method(sol::PFTDPWSolver)
+@inline function search_method(@nospecialize sol::PFTDPWSolver)
     return if sol.check_repeat_obs
         if sol.vanilla
             vanilla_obs_check_search
@@ -72,10 +72,11 @@ function POMDPTools.action_info(planner::PFTDPWPlanner, b)
 
     iter = _search(search_method(sol), planner, t0)
 
-    a, a_idx = select_best(MaxQ(), planner.tree, 1)
-
-    # If not enough time for even 1 tree query -> give random action
-    iszero(a_idx) && ( a = rand(sol.rng, actions(pomdp)) )
+    a = if isempty(first(planner.tree.b_children))
+        sol.default_action(pomdp, b)
+    else
+        first(select_best(MaxQ(), planner.tree, 1))
+    end
 
     return a::A, (
         n_iter = iter::Int,

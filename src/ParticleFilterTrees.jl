@@ -66,6 +66,22 @@ end
 
 include("criteria.jl")
 
+struct ConstantDefaultAction{A}
+    a::A
+end
+
+function (da::ConstantDefaultAction)(pomdp::POMDP, ::Any)
+    @warn "Default PFT-DPW action"
+    return da.a
+end
+
+struct RandomDefaultAction end
+
+function (da::RandomDefaultAction)(pomdp::POMDP, ::Any)
+    @warn "Default PFT-DPW action"
+    return rand(actions(pomdp))
+end
+
 """
 ...
 - `max_depth::Int = 20` - Maximum tree search depth
@@ -87,7 +103,7 @@ include("criteria.jl")
 - `treecache_size::Int = 1_000` - Number of belief/action nodes to preallocate in tree (reduces `Base._growend!` calls)
 ...
 """
-Base.@kwdef struct PFTDPWSolver{CRIT, RNG<:AbstractRNG, VE} <: Solver
+Base.@kwdef struct PFTDPWSolver{CRIT, RNG<:AbstractRNG, VE, DA} <: Solver
     tree_queries::Int       = 1_000
     max_time::Float64       = Inf # (seconds)
     max_depth::Int          = 20
@@ -105,6 +121,7 @@ Base.@kwdef struct PFTDPWSolver{CRIT, RNG<:AbstractRNG, VE} <: Solver
     vanilla::Bool           = false
     beliefcache_size::Int   = 1_000
     treecache_size::Int     = 1_000
+    default_action::DA      = RandomDefaultAction()
 end
 
 include(joinpath("util","cache.jl"))

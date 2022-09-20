@@ -1,8 +1,7 @@
 [deps]
 Distributions = "31c24e10-a181-5473-b8eb-7969acd0382f"
-POMDPModelTools = "08074719-1b2a-587c-a292-00f91cc44415"
 POMDPModels = "355abbd5-f08e-5560-ac9e-8b5f2592a0ca"
-POMDPSimulators = "e0d0a172-29c6-5d4e-96d0-f262df5d01fd"
+POMDPTools = "7588e00f-9cae-40de-98dc-e0c70c48cdd7"
 POMDPs = "a93abf59-7444-517b-a68a-c42f96afdd7d"
 ParticleFilters = "c8b314e2-9260-5cf8-ae76-3be7461ca6d0"
 Pkg = "44cfe95a-1eb2-52ea-b672-e2afdf69b78f"
