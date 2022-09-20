@@ -32,7 +32,7 @@ function vanilla_obs_check_search(planner::PFTDPWPlanner, b_idx::Int, d::Int)
     γ = discount(pomdp)
 
     if iszero(d)
-        return MCTS.estimate_value(planner.solved_VE, pomdp, bp, 0)
+        return MCTS.estimate_value(planner.solved_VE, pomdp, tree.b[b_idx], 0)
     elseif tree.b[b_idx].non_terminal_ws < eps()
         return 0.0
     end
@@ -74,7 +74,7 @@ function vanilla_no_obs_check_search(planner::PFTDPWPlanner, b_idx::Int, d::Int)
     γ = discount(pomdp)
 
     if iszero(d)
-        return MCTS.estimate_value(planner.solved_VE, pomdp, bp, 0)
+        return MCTS.estimate_value(planner.solved_VE, pomdp, tree.b[b_idx], 0)
     elseif tree.b[b_idx].non_terminal_ws < eps()
         return 0.0
     end

@@ -42,14 +42,27 @@ end
     end
 end
 
+"""
+function barrier for all possible search functions
+"""
+function _search(f, planner, t0)
+    sol = planner.sol
+    max_iter = sol.tree_queries
+    max_time = sol.max_time
+    max_depth = sol.max_depth
+    iter = 0
+    while (time()-t0 < max_time) && (iter < max_iter)
+        f(planner, 1, max_depth)
+        iter += 1
+    end
+    return iter
+end
+
 function POMDPTools.action_info(planner::PFTDPWPlanner, b)
     t0 = time()
 
     sol = planner.sol
     pomdp = planner.pomdp
-    max_iter = sol.tree_queries
-    max_time = sol.max_time
-    max_depth = sol.max_depth
 
     A = actiontype(pomdp)
 
@@ -57,15 +70,9 @@ function POMDPTools.action_info(planner::PFTDPWPlanner, b)
     free!(planner.cache)
     insert_root!(planner, b)
 
-    iter = 0
-    search = search_method(sol)
+    iter = _search(search_method(sol), planner, t0)
 
-    while (time()-t0 < max_time) && (iter < max_iter)
-        search(planner, 1, max_depth)
-        iter += 1
-    end
-
-    a, a_idx = UCB1action(planner, planner.tree, 1, 0.0)
+    a, a_idx = select_best(MaxQ(), planner.tree, 1)
 
     # If not enough time for even 1 tree query -> give random action
     iszero(a_idx) && ( a = rand(sol.rng, actions(pomdp)) )
