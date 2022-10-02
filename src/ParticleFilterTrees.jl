@@ -103,7 +103,7 @@ end
 - `treecache_size::Int = 1_000` - Number of belief/action nodes to preallocate in tree (reduces `Base._growend!` calls)
 ...
 """
-Base.@kwdef struct PFTDPWSolver{CRIT, RNG<:AbstractRNG, VE, DA} <: Solver
+Base.@kwdef struct PFTDPWSolver{CRIT, RNG<:AbstractRNG, DA} <: Solver
     tree_queries::Int       = 1_000
     max_time::Float64       = Inf # (seconds)
     max_depth::Int          = 20
@@ -114,7 +114,7 @@ Base.@kwdef struct PFTDPWSolver{CRIT, RNG<:AbstractRNG, VE, DA} <: Solver
     alpha_a::Float64        = 0.0 # Action Progressive widening parameter
     criterion::CRIT         = MaxPoly(1.0)
     rng::RNG                = Random.default_rng()
-    value_estimator::VE     = FastRandomSolver()
+    value_estimator::Any    = FastRandomSolver()
     check_repeat_obs::Bool  = true
     resample::Bool          = false
     enable_action_pw::Bool  = false

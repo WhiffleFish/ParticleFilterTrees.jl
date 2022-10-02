@@ -18,8 +18,8 @@ function is_obs_required(pomdp::POMDP)
     return obs_req
 end
 
-struct RandomSolver{RNG<:AbstractRNG}
-    rng::RNG
+struct RandomSolver
+    rng::AbstractRNG
 end
 
 RandomSolver() = RandomSolver(Random.default_rng())
@@ -33,8 +33,8 @@ POMDPs.solve(s::RandomSolver, pomdp::POMDP) = RandomPolicy(actions(pomdp), s.rng
 
 POMDPs.action(s::RandomPolicy, ::Any) = rand(s.rng, s.actions)
 
-struct FastRandomSolver{RNG <: Random.AbstractRNG}
-    rng::RNG
+struct FastRandomSolver
+    rng::Random.AbstractRNG
     d::Union{Nothing, Int}
 end
 
@@ -124,10 +124,10 @@ struct PlaceHolderUpdater <: Updater end
 
 POMDPs.update(::PlaceHolderUpdater, args...) = error("Updater is placeholder")
 
-struct PORollout{SOL<:Solver, UPD<:Updater, RNG<:AbstractRNG}
-    solver::SOL
-    updater::UPD
-    rng::RNG
+struct PORollout
+    solver::Solver
+    updater::Updater
+    rng::AbstractRNG
     n_rollouts::Int # number of rollouts per value estimation. if 0, rollout all particles.
     d::Union{Nothing, Int}
 end
@@ -189,14 +189,13 @@ end
 
 function partial_rollout(est::ParticleFilterTrees.SolvedPORollout, pomdp::POMDP{S}, b::ParticleCollection{S}, d::Int) where S
     v = 0.0
-    w = 1/est.n_rollouts
     b_ = est.rb
     for _ in 1:est.n_rollouts
         b_.particles .= est.ib.particles
         s = rand(est.rng, b)
-        v += w*rollout(est, pomdp, b_, s, d)
+        v += rollout(est, pomdp, b_, s, d)
     end
-    return v
+    return v/est.n_rollouts
 end
 
 function rollout(est::ParticleFilterTrees.SolvedPORollout, pomdp::POMDP{S}, b::ParticleCollection{S}, s::S, d::Int) where S

@@ -78,10 +78,10 @@ function POMDPTools.action_info(planner::PFTDPWPlanner, b)
         first(select_best(MaxQ(), planner.tree, 1))
     end
 
-    return a::A, (
-        n_iter = iter::Int,
-        tree = planner.tree::PFTDPWTree,
-        time = (time() - t0)::Float64
+    return a, (
+        n_iter = iter,
+        tree = planner.tree,
+        time = time() - t0
         )
 end
 
