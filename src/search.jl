@@ -83,7 +83,7 @@ function vanilla_no_obs_check_search(planner::PFTDPWPlanner, b_idx::Int, d::Int)
     if length(tree.ba_children[ba_idx]) ≤ sol.k_o*tree.Nha[ba_idx]^sol.alpha_o
         bp, o, r = GenBelief(planner, pomdp, tree.b[b_idx], a)
         bp_idx = insert_belief!(tree, bp, ba_idx, o, r, planner)
-        total = r + r + γ*vanilla_no_obs_check_search(planner, bp_idx, d-1)
+        total = r + γ*vanilla_no_obs_check_search(planner, bp_idx, d-1)
     else
         bp_idx = rand(sol.rng, tree.ba_children[ba_idx])
         r = tree.b_rewards[bp_idx]
@@ -130,7 +130,6 @@ function obs_check_search(planner::PFTDPWPlanner, b_idx::Int, d::Int)
         bp_idx = rand(sol.rng, tree.ba_children[ba_idx])
         r = tree.b_rewards[bp_idx::Int]
         total = r + discount(pomdp)*obs_check_search(planner, bp_idx, d-1)
-
     end
 
     tree.Nh[b_idx] += 1

@@ -4,13 +4,17 @@ struct MaxUCB
 end
 
 function select_best(criteria::MaxUCB, tree::PFTDPWTree{S,A}, b_idx) where {S,A}
+    Nh = tree.Nh[b_idx]
+    b_children = tree.b_children[b_idx]
+    Nh < length(b_children) && return Tuple(b_children[Nh + 1])
+
     c = criteria.c
-    lnh = log(tree.Nh[b_idx])
+    lnh = log(Nh)
     local opt_a::A
     max_ucb = -Inf
     opt_idx = 0
 
-    for (a,ba_idx) in tree.b_children[b_idx]
+    for (a,ba_idx) in b_children
         Nha = tree.Nha[ba_idx]
         iszero(Nha) && return a::A, ba_idx::Int
         Q̂ = tree.Qha[ba_idx]
@@ -32,14 +36,17 @@ struct MaxPoly
 end
 
 function select_best(criteria::MaxPoly, tree::PFTDPWTree{S,A}, b_idx) where {S,A}
-    (;c,β) = criteria
     Nh = tree.Nh[b_idx]
+    b_children = tree.b_children[b_idx]
+    Nh < length(b_children) && return Tuple(b_children[Nh + 1])
+
+    (;c,β) = criteria
     powNh = Nh^β
     local opt_a::A
     max_ucb = -Inf
     opt_idx = 0
 
-    for (a,ba_idx) in tree.b_children[b_idx]
+    for (a,ba_idx) in b_children
         Nha = tree.Nha[ba_idx]
         iszero(Nha) && return a::A, ba_idx::Int
         Q̂ = tree.Qha[ba_idx]

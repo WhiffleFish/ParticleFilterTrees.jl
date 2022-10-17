@@ -76,6 +76,4 @@ function GenBelief(
     return bp::PFTBelief{S}, o::O, weighted_return::Float64
 end
 
-function incremental_avg(Qhat::Float64, Q::Float64, N::Int)
-    return Qhat + (Q - Qhat)/N
-end
+incremental_avg(Q̂::Float64, Q::Float64, N::Int) = Q̂ + (Q - Q̂)/N
