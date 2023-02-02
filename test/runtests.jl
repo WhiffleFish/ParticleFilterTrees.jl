@@ -23,3 +23,5 @@ include("PFTDPW.jl")
 include("subhunt_terminal.jl")
 
 include("sampling.jl")
+
+include("d3trees.jl")

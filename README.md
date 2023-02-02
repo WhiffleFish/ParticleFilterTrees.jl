@@ -8,7 +8,7 @@
 | ----------------- | ------------- | --------------------- | ------------------------- |
 | `max_depth`       | `Int`         | `20`                  | Maximum tree search depth |
 | `n_particles`     | `Int`         | `100`                 | Number of particles representing tree node belief |
-| `c`               | `Float64`     | `1.0`                 | UCB exploration parameter |
+| `criterion`       | `Any`         | `PolyUCB(1.)`         | Action selection criterion |
 | `k_o`             | `Float64`     | `10.0`                | Initial observation widening parameter |
 | `alpha_o`         | `Float64`     | `0.0`                 | Observation progressive widening parameter |
 | `k_a`             | `Float64`     | `5.0`                 | Initial action widening parameter |
