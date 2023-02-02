@@ -12,6 +12,7 @@ using StaticArrays
 using ParticleFilters
 using ParticleFilterTrees
 using SubHunt
+using D3Trees
 # using LaserTag
 using VDPTag2
 

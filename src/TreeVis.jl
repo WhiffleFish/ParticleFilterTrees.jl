@@ -1,6 +1,6 @@
 function D3Trees.D3Tree(tree::PFTDPWTree{S,A,O}; show_obs::Bool=true) where {S,A,O}
 
-    if isempty(tree.bao_children)
+    if isempty(tree.bao_children) && show_obs
         show_obs = false
         @warn """show_obs=true, but no observation labels found.
         Make sure check_repeat_obs=true in solver to track observations"""
@@ -108,3 +108,5 @@ end
 function link_width(N::Int, maxN::Int; max_width::Int=20)
     return max(round(sqrt(N/maxN), sigdigits=3)*max_width,1)
 end
+
+D3Trees.D3Tree(pol::PFTDPWPlanner; kwargs...) = D3Tree(pol.tree; kwargs...)

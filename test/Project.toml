@@ -1,4 +1,5 @@
 [deps]
+D3Trees = "e3df1716-f71e-5df9-9e2d-98e193103c45"
 Distributions = "31c24e10-a181-5473-b8eb-7969acd0382f"
 POMDPModels = "355abbd5-f08e-5560-ac9e-8b5f2592a0ca"
 POMDPTools = "7588e00f-9cae-40de-98dc-e0c70c48cdd7"
