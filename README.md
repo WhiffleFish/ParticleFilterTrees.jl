@@ -1,4 +1,6 @@
 # ParticleFilterTrees.jl
+[![CI](https://github.com/WhiffleFish/ParticleFilterTrees.jl/actions/workflows/CI.yml/badge.svg)](https://github.com/WhiffleFish/ParticleFilterTrees.jl/actions/workflows/CI.yml)[![codecov](https://codecov.io/gh/WhiffleFish/ParticleFilterTrees.jl/branch/main/graph/badge.svg?token=9HK0F2AU2R)](https://codecov.io/gh/WhiffleFish/ParticleFilterTrees.jl)
+
 
 ## Particle Filter Trees with Double Progressive Widening
 
