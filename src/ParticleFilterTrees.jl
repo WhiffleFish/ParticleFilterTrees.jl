@@ -30,7 +30,7 @@ include(joinpath("util","ValueEstimation.jl"))
 - `Nha` - Number of times action node has been visited
 - `Qha` - Q value associated with some action node
 - `b` - Vector of beliefs (`PFTBelief`)
-- `b_children` - Mapping belief ID to (action, action ID) tuple
+- `b_children` - Mapping belief ID to (action, action ID) pair
 - `b_rewards` - R(b,a) where index is ID of b' where b' = τ(b,a,o)
 - `bao_children` - `(ba_idx,O) => bp_idx`
 - `ba_children` - `ba_idx => [bp_idx, bp_idx, bp_idx, ...]`
@@ -42,7 +42,7 @@ struct PFTDPWTree{S,A,O}
     Qha::PV{Float64} # Map ba node to associated Q value
 
     b::PV{PFTBelief{S}}
-    b_children::NPV{Tuple{A,Int}}# b_idx => [(a,ba_idx), ...]
+    b_children::NPV{Pair{A,Int}}# b_idx => [(a,ba_idx), ...]
     b_rewards::PV{Float64}# Map b' node index to immediate reward associated with trajectory bao where b' = τ(bao)
 
     bao_children::Dict{Tuple{Int,O},Int} # (ba_idx,O) => bp_idx
@@ -55,7 +55,7 @@ struct PFTDPWTree{S,A,O}
             PushVector{Float64}(sz),
 
             PushVector{PFTBelief{S}}(sz),
-            NestedPushVector{Tuple{A,Int}}(ceil(Int,k_o), sz),
+            NestedPushVector{Pair{A,Int}}(ceil(Int,k_o), sz),
             PushVector{Float64}(sz),
 
             sizehint!(Dict{Tuple{Int,O},Int}(), check_repeat_obs ? sz : 0),

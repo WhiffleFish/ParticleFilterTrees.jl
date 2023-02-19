@@ -58,7 +58,7 @@ end
 
 function insert_action!(planner::PFTDPWPlanner, tree::PFTDPWTree{S,A}, b_idx::Int, a::A) where {S,A}
     n_ba = length(tree.ba_children)+1
-    push!(tree.b_children[b_idx], (a,n_ba))
+    push!(tree.b_children[b_idx], a=>n_ba)
 
     freenext!(tree.ba_children)
 
