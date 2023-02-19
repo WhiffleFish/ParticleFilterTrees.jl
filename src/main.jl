@@ -27,19 +27,7 @@ function POMDPs.solve(sol::PFTDPWSolver, pomdp::POMDP{S,A,O}) where {S,A,O}
 end
 
 @inline function search_method(@nospecialize sol::PFTDPWSolver)
-    return if sol.check_repeat_obs
-        if sol.vanilla
-            vanilla_obs_check_search
-        else
-            obs_check_search
-        end
-    else
-        if sol.vanilla
-            vanilla_no_obs_check_search
-        else
-            no_obs_check_search
-        end
-    end
+    return sol.check_repeat_obs ? obs_check_search : no_obs_check_search
 end
 
 """

@@ -98,7 +98,6 @@ end
 - `check_repeat_obs::Bool = true` - Check that repeat observations do not overwrite beliefs (added dictionary overhead)
 - `resample::Bool = false` - resample beliefs at each update
 - `enable_action_pw::Bool = false` - Alias for `alpha_a = 0.0`
-- `vanilla::Bool = false` - if vanilla, only perform value estimation at max depth
 - `beliefcache_size::Int = 1_000` - Number of particle/weight vectors to cache offline
 - `treecache_size::Int = 1_000` - Number of belief/action nodes to preallocate in tree (reduces `Base._growend!` calls)
 ...
@@ -118,7 +117,6 @@ Base.@kwdef struct PFTDPWSolver{CRIT, RNG<:AbstractRNG, DA} <: Solver
     check_repeat_obs::Bool  = true
     resample::Bool          = false
     enable_action_pw::Bool  = false
-    vanilla::Bool           = false
     beliefcache_size::Int   = 1_000
     treecache_size::Int     = 1_000
     default_action::DA      = RandomDefaultAction()
