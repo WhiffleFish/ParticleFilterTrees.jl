@@ -12,7 +12,7 @@ using PushVectors
 using ParticleFilters
 
 export PFTDPWTree
-export PFTDPWSolver, PFTDPWPlanner
+export PFTDPWSolver, SparsePFTSolver, PFTDPWPlanner
 export PFTBelief
 
 include(joinpath("util","belief.jl"))
@@ -121,6 +121,25 @@ Base.@kwdef struct PFTDPWSolver{CRIT, RNG<:AbstractRNG, DA} <: Solver
     treecache_size::Int     = 1_000
     default_action::DA      = RandomDefaultAction()
 end
+
+"""
+...
+- `max_depth::Int = 20` - Maximum tree search depth
+- `n_particles::Int = 100` - Number of particles representing belief
+- `k_o::Float64 = 10.0` - Initial observation widening parameter
+- `k_a::Float64 = 5.0` - Initial action widening parameter
+- `criterion = MaxPoly()` - action selection criterion
+- `tree_queries::Int = 1_000` - Maximum number of tree search iterations
+- `max_time::Float64 = Inf` - Maximum tree search time (in seconds)
+- `rng = Random.default_rng()` - Random number generator
+- `value_estimator = FastRandomSolver()` - Belief node value estimator
+- `check_repeat_obs::Bool = true` - Check that repeat observations do not overwrite beliefs (added dictionary overhead)
+- `resample::Bool = false` - resample beliefs at each update
+- `beliefcache_size::Int = 1_000` - Number of particle/weight vectors to cache offline
+- `treecache_size::Int = 1_000` - Number of belief/action nodes to preallocate in tree (reduces `Base._growend!` calls)
+...
+"""
+SparsePFTSolver(;kwargs...) = PFTDPWSolver(;kwargs..., alpha_o=0.0, alpha_a=0.0, enable_action_pw=false)
 
 include(joinpath("util","cache.jl"))
 
