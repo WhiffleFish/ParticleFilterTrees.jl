@@ -37,3 +37,29 @@ solver = PFTDPWSolver(tree_queries=10_000, check_repeat_obs=false)
 planner = solve(solver, pomdp)
 a = action(planner, b0)
 ```
+
+### SparsePFT
+
+Using sufficiently large `treecache_size` and `beliefcache_size` allows for very few online allocations.
+
+```julia
+using BenchmarkTools
+
+pomdp = LightDark1D()
+b0 = initialstate(pomdp)
+solver = SparsePFTSolver(
+    max_time            = 0.1, 
+    tree_queries        = 100_000, 
+    treecache_size      = 50_000, 
+    beliefcache_size    = 50_000, 
+    check_repeat_obs    = false
+)
+planner = solve(solver, pomdp)
+action(planner, b0)
+@btime action(planner, b0)
+```
+
+```
+100.006 ms (0 allocations: 0 bytes)
+```
+
